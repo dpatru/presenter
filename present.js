@@ -13,13 +13,31 @@ function loadFile() {
 }
 function updateDisplay(){
     console.log('updating display this = ', this);
-    display.document.body.innerHTML = $("content").value;
+    display.document.body.innerHTML = "<style>em {background:yellow}</style>"+$("content").value;
 }
 
 document.body.innerHTML +=
     '<input id="myFile" type="file" onchange="loadFile()"/>' + 
     '<textarea id="content" style="display:block"></textArea>' + 
-    '<button onclick="updateDisplay();">Update Display</button>';
+    '<button onclick="updateDisplay();">Update Display</button>' +
+    '<br><label>fontSize<input type="range" min="1" max="10" step=".1" value="1" oninput="updateFontSize(this.value)" onchange="updateFontSize(this.value)"></label>';
     // '<textarea id="content" style="display:block; width:100%"></textarea>'+
     // '<button onclick="updateDisplay();">Update Display</button>';
 
+function updateFontSize(s){
+    console.log('changing font size to '+s);
+    var b = display.document.body;
+    b.style.fontSize = s+'em';
+}
+
+function maximize() {
+    var b = display.document.body;
+    for (var h = 1; h < 100; h++) {
+	b.style.fontSize = h+"em"
+	if (b.scrollHeight > b.clientHeight) {
+	    h--;
+	    b.style.textSize = h+"em"
+	    break
+	}
+    }
+}
