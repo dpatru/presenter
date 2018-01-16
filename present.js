@@ -1,5 +1,18 @@
 var display = window.open("display.html", "display");
 function $(id){return document.getElementById(id);}
+function escapeHtml(unsafe) {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+var emphPattern = /(\W)\*(\w.*\S)\*(\W)/.compile()
+function emphasize(txt) {
+    return txt.replace(/(\W)\*(\w.*?\S)\*(\W)/g,
+		       function(m,m1,m2,m3){return m1+"<em>"+m2+"</em>"+m3;});
+}
 function loadFile() {
     // https://stackoverflow.com/a/33641308/268040
     // https://developer.mozilla.org/en-US/docs/Web/API/File/Using_files_from_web_applications
@@ -13,8 +26,14 @@ function loadFile() {
 }
 function updateDisplay(){
     console.log('updating display this = ', this);
-    display.document.body.innerHTML = "<style>em {background:yellow}</style>"+$("content").value;
+    display.document.body.innerHTML =
+	"<style>"+
+	"em {background:yellow}"+
+	"body {white-space:pre-wrap}"+
+	"</style>"+
+	emphasize(escapeHtml($("content").value));
 }
+
 
 document.body.innerHTML +=
     '<input id="myFile" type="file" onchange="loadFile()"/>' + 
@@ -41,3 +60,4 @@ function maximize() {
 	}
     }
 }
+
