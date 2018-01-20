@@ -29,10 +29,8 @@ function loadFile() {
     };
     reader.readAsText(file);
 }
-function updateDisplay(){
-    console.log('updating display this = ', this);
-    display.document.body.innerHTML =
-	"<style>"+
+function myhtml() {
+    return "<style>"+
 	document.querySelector('input[name="style"]:checked').value+
 	"body {margin:1em; white-space:pre-wrap;}"+
 	"</style>"+
@@ -40,9 +38,24 @@ function updateDisplay(){
 }
 
 
+function updatePreview(){
+    var frameRef = document.getElementById('preview');
+    var d = frameRef.contentWindow
+        ? frameRef.contentWindow.document
+        : frameRef.contentDocument
+    d.body.innerHTML = myhtml();
+}
+
+function updateDisplay(){
+    updatePreview();
+    display.document.body.innerHTML = myhtml();
+}
+
 document.body.innerHTML +=
+    '<iframe id="preview"></iframe>'+
     '<input id="myFile" type="file" onchange="loadFile()"/>' + 
     '<textarea id="content" style="display:block"></textArea>' + 
+    '<button onclick="updatePreview();">Update Preview</button>' +
     '<button onclick="updateDisplay();">Update Display</button>' +
     '<br><label>fontSize <span id="fontSize">1 em</span> <input type="range" min="1" max="10" step=".1" value="1" oninput="updateFontSize(this.value)" onchange="updateFontSize(this.value)"></label>' +
     '<br><label><input name="style" checked type="radio" value="em.hilite {font-style:normal; background:yellow} em.bold {font-style:normal; color:red}"> black on white</label>'+
@@ -52,6 +65,7 @@ document.body.innerHTML +=
     // '<textarea id="content" style="display:block; width:100%"></textarea>'+
     // '<button onclick="updateDisplay();">Update Display</button>';
 
+    
 function updateFontSize(s){
     console.log('changing font size to '+s);
     var b = display.document.body;
