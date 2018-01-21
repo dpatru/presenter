@@ -1,45 +1,48 @@
 var display = 0; // global variable pointing to the display window.
-function runInDisplay(action) {
-    console.log('runInDisplay');
-    if (!display || display.closed) {
-	display = window.open('display.html', 'display');
-	console.log('opened display');
-	if (display.document.readyState == 'complete') {
-	    console.log('display opened and complete, html',display.document.body.innerHTML);
-	    action(display);
-	}
-	else {
-	    console.log('display opened and incomplete',display.document.body.innerHTML);
-	    display.document.onreadystatechange = function() {
-		console.log('readystatechanged', display.document.readyState);
-		if (display.document.readyState === 'complete') {
-		    console.log('completed, doing action.');
-		    action(display);
-		}
-	    }
+
+var oldHTML, oldts=Date.now();
+function checkDisplay() {
+    if (!display) {
+	if (display !== oldHTML) {
+	    console.log('display is null, delta time', Date.now() - oldts);
+	    oldHTML = display;
+	    oldts = Date.now();
 	}
     }
+    else if (display.document && display.document.body.innerHTML !== oldHTML) {
+	console.log('innerHTML =',
+		    display.document.body.innerHTML,
+		    Date.now() - oldts);
+	oldHTML = display.document.body.innerHTML;
+	oldts = Date.now();
+    }
+}
+window.setInterval(checkDisplay, 10);
+
+function runInDisplay(action) {
+    console.log('runInDisplay');
+    if (!display) {
+	// console.log('no display');
+	// try to open an existing window and kill it
+	// If an existing window exists, then the onload event won't fire.
+	display = window.open('', 'display');
+	if (display) { display.close();	}
+	display = window.open('display.html', 'display');
+	display.onload = function(){
+	    // console.log('onload');
+	    action(display);
+	};
+    }
+    else if (display.closed) {
+	// console.log('closed display');
+	display = window.open('display.html', 'display');
+	display.onload = function(){ action(display); };
+    }
     else {
-	console.log('already opened display', display, display.document, display.document.readyState);
+	// console.log('already opened display', display, display.document, display.document.readyState);
 	action(display);
     }
 }
-// 	if (!display || display.closed) {
-// 	    display = window.open("display.html", "display");
-//     }
-//     console.log('display=',display, display.document.readyState);
-//     if (display.document.readyState === 'complete') {
-// 	console.log('display was already complete.');
-// 	console.log('before:', display.document.body.innerHTML);
-// 	action();
-// 	console.log('after:', display.document.body.innerHTML);
-//     }
-//     // attach a listener in case the window is still loading.
-//     display.document.onreadystatechange = function() {
-// 	console.log('readystatechanged');
-// 	if (display.document.readyState === 'complete') { action(); }
-//     }
-// }
 function $(id){return document.getElementById(id);}
 function escapeHtml(unsafe) {
     return unsafe
@@ -89,14 +92,11 @@ function updatePreview(){
 
 function setDisplay() {
     runInDisplay(function (d) {
-	console.log('setting display', d.document.body.innerHTML);
 	d.document.body.innerHTML = myhtml();
-	console.log('after setting display', d.document.body.innerHTML);
     });
 }
 
 function updateDisplay(){
-    console.log('updateDisplay with',myhtml());
     updatePreview();
     setDisplay();
 }
@@ -117,7 +117,6 @@ document.body.innerHTML +=
 
     
 function updateFontSize(s){
-    console.log('changing font size to '+s);
     runInDisplay(function(d) {
 	var b = d.document.body;
 	b.style.fontSize = $('fontSize').innerText = s+'em';
