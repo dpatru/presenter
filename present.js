@@ -1,4 +1,45 @@
-var display = window.open("display.html", "display");
+var display = 0; // global variable pointing to the display window.
+function runInDisplay(action) {
+    console.log('runInDisplay');
+    if (!display || display.closed) {
+	display = window.open('display.html', 'display');
+	console.log('opened display');
+	if (display.document.readyState == 'complete') {
+	    console.log('display opened and complete, html',display.document.body.innerHTML);
+	    action(display);
+	}
+	else {
+	    console.log('display opened and incomplete',display.document.body.innerHTML);
+	    display.document.onreadystatechange = function() {
+		console.log('readystatechanged', display.document.readyState);
+		if (display.document.readyState === 'complete') {
+		    console.log('completed, doing action.');
+		    action(display);
+		}
+	    }
+	}
+    }
+    else {
+	console.log('already opened display', display, display.document, display.document.readyState);
+	action(display);
+    }
+}
+// 	if (!display || display.closed) {
+// 	    display = window.open("display.html", "display");
+//     }
+//     console.log('display=',display, display.document.readyState);
+//     if (display.document.readyState === 'complete') {
+// 	console.log('display was already complete.');
+// 	console.log('before:', display.document.body.innerHTML);
+// 	action();
+// 	console.log('after:', display.document.body.innerHTML);
+//     }
+//     // attach a listener in case the window is still loading.
+//     display.document.onreadystatechange = function() {
+// 	console.log('readystatechanged');
+// 	if (display.document.readyState === 'complete') { action(); }
+//     }
+// }
 function $(id){return document.getElementById(id);}
 function escapeHtml(unsafe) {
     return unsafe
@@ -46,9 +87,18 @@ function updatePreview(){
     d.body.innerHTML = myhtml();
 }
 
+function setDisplay() {
+    runInDisplay(function (d) {
+	console.log('setting display', d.document.body.innerHTML);
+	d.document.body.innerHTML = myhtml();
+	console.log('after setting display', d.document.body.innerHTML);
+    });
+}
+
 function updateDisplay(){
+    console.log('updateDisplay with',myhtml());
     updatePreview();
-    display.document.body.innerHTML = myhtml();
+    setDisplay();
 }
 
 document.body.innerHTML +=
@@ -68,19 +118,23 @@ document.body.innerHTML +=
     
 function updateFontSize(s){
     console.log('changing font size to '+s);
-    var b = display.document.body;
-    b.style.fontSize = $('fontSize').innerText = s+'em';
+    runInDisplay(function(d) {
+	var b = d.document.body;
+	b.style.fontSize = $('fontSize').innerText = s+'em';
+    });
 }
 
 function maximize() {
-    var b = display.document.body;
-    for (var h = 1; h < 100; h++) {
-	b.style.fontSize = h+"em"
-	if (b.scrollHeight > b.clientHeight) {
-	    h--;
-	    b.style.textSize = h+"em"
-	    break
+    runInDisplay(function(d) {
+	var b = d.document.body;
+	for (var h = 1; h < 100; h++) {
+	    b.style.fontSize = h+"em"
+	    if (b.scrollHeight > b.clientHeight) {
+		h--;
+		b.style.textSize = h+"em"
+		break
+	    }
 	}
-    }
+    });
 }
 
