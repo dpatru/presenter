@@ -1,26 +1,21 @@
 var display = 0; // global variable pointing to the display window.
 
-var oldHTML, oldts=Date.now();
-function checkDisplay() {
-    if (!display) {
-	if (display !== oldHTML) {
-	    console.log('display is null, delta time', Date.now() - oldts);
-	    oldHTML = display;
-	    oldts = Date.now();
-	}
-    }
-    else if (display.document && display.document.body.innerHTML !== oldHTML) {
-	console.log('innerHTML =',
-		    display.document.body.innerHTML,
-		    Date.now() - oldts);
-	oldHTML = display.document.body.innerHTML;
-	oldts = Date.now();
+function sizePreview(){
+    var previewScale = document.getElementById('previewScale').value;
+    document.getElementById('previewScaleText').innerText = previewScale+'%';
+    if (display && display.innerWidth) {
+	var preview = document.getElementById('preview');
+	preview.style.height = display.innerHeight * previewScale/100.0;
+	preview.style.width = display.innerWidth * previewScale/100.0;
+	var previewDocument = getPreviewDocument();
+	previewDocument.body.style.transform = 'scale('+previewScale/100.0+')';
+	previewDocument.body.style.transformOrigin = '0 0';
+	previewDocument.body.style.margin = '0';
+	previewDocument.body.style.padding = '1em';
     }
 }
-window.setInterval(checkDisplay, 10);
-
 function runInDisplay(action) {
-    console.log('runInDisplay');
+    // console.log('runInDisplay');
     if (!display) {
 	// console.log('no display');
 	// try to open an existing window and kill it
@@ -42,7 +37,9 @@ function runInDisplay(action) {
 	// console.log('already opened display', display, display.document, display.document.readyState);
 	action(display);
     }
+    display.onresize=sizePreview;
 }
+
 function $(id){return document.getElementById(id);}
 function escapeHtml(unsafe) {
     return unsafe
@@ -76,17 +73,20 @@ function loadFile() {
 function myhtml() {
     return "<style>"+
 	document.querySelector('input[name="style"]:checked').value+
-	"body {margin:1em; white-space:pre-wrap;}"+
+	"body {padding:1em; margin:0; white-space:pre-wrap;}"+
 	"</style>"+
 	emphasize(escapeHtml($("content").value));
 }
 
-
-function updatePreview(){
+function getPreviewDocument() {
     var frameRef = document.getElementById('preview');
     var d = frameRef.contentWindow
         ? frameRef.contentWindow.document
         : frameRef.contentDocument
+    return d;
+}
+function updatePreview(){
+    var d = getPreviewDocument();
     d.body.innerHTML = myhtml();
 }
 
@@ -102,14 +102,19 @@ function updateDisplay(){
 }
 
 document.body.innerHTML +=
-    '<iframe id="preview"></iframe>'+
+    '<div id="controlPane" style="float:left">'+
     '<input id="myFile" type="file" onchange="loadFile()"/>' + 
     '<textarea id="content" style="display:block"></textArea>' + 
     '<button onclick="updatePreview();">Update Preview</button>' +
     '<button onclick="updateDisplay();">Update Display</button>' +
+    '<br><label>scale <span id="previewScaleText">50%</span><input id="previewScale" type="range" min="1" max="100" step="1" value="50" oninput="sizePreview()"></label>'+
     '<br><label>fontSize <span id="fontSize">1 em</span> <input type="range" min="1" max="10" step=".1" value="1" oninput="updateFontSize(this.value)" onchange="updateFontSize(this.value)"></label>' +
     '<br><label><input name="style" checked type="radio" value="em.hilite {font-style:normal; background:yellow} em.bold {font-style:normal; color:red}"> black on white</label>'+
     '<br><label><input name="style" type="radio" value="em.hilite {font-style: normal; color:yellow} em.bold {font-style:normal;color:lightcoral} body {color:white; background-color:black}"> white on black</label>'+
+    '</div>'+
+    '<div id="previewPane" style="float:right">'+
+    '<iframe id="preview"></iframe>'+
+    '</div>'+
     '';
 
     // '<textarea id="content" style="display:block; width:100%"></textarea>'+
@@ -117,10 +122,12 @@ document.body.innerHTML +=
 
     
 function updateFontSize(s){
+    var size = $('fontSize').innerText = s+'em';
     runInDisplay(function(d) {
 	var b = d.document.body;
-	b.style.fontSize = $('fontSize').innerText = s+'em';
+	b.style.fontSize = size;
     });
+    getPreviewDocument().body.style.fontSize = size;
 }
 
 function maximize() {
