@@ -8,10 +8,11 @@ function sizePreview(){
 	preview.style.height = display.innerHeight * previewScale/100.0;
 	preview.style.width = display.innerWidth * previewScale/100.0;
 	var previewDocument = getPreviewDocument();
-	previewDocument.body.style.transform = 'scale('+previewScale/100.0+')';
-	previewDocument.body.style.transformOrigin = '0 0';
-	previewDocument.body.style.margin = '0';
-	previewDocument.body.style.padding = '1em';
+	previewDocument.body.style.zoom = previewScale/100.0;
+	// previewDocument.body.style.transform = 'scale('+previewScale/100.0+')';
+	// previewDocument.body.style.transformOrigin = '0 0';
+	// previewDocument.body.style.margin = '0';
+	// previewDocument.body.style.padding = '1em';
     }
 }
 function runInDisplay(action) {
