@@ -5,10 +5,20 @@ function sizePreview(){
     document.getElementById('previewScaleText').innerText = previewScale+'%';
     if (display && display.innerWidth) {
 	var preview = document.getElementById('preview');
-	preview.style.height = display.innerHeight * previewScale/100.0;
-	preview.style.width = display.innerWidth * previewScale/100.0;
+	preview.style.height = Math.round(display.innerHeight * previewScale/100.0);
+	preview.style.width = Math.round(display.innerWidth * previewScale/100.0);
 	var previewDocument = getPreviewDocument();
 	previewDocument.body.style.zoom = previewScale/100.0;
+	// adjust for borders, etc.
+	while (previewDocument.body.innerHeight < display.document.body.clientHeight * previewScale/100.0) {
+	    $('#preview').height($('#preview').height()+1);
+	    console.log('adjusting height', $('#preview').height());
+	}
+	while (previewDocument.body.innerWidth < display.document.body.clientWidth * previewScale/100.0) {
+	    $('#preview').width($('#preview').width()+1);
+	    console.log('adjusting width', $('#preview').width());
+	}
+	    
 	// previewDocument.body.style.transform = 'scale('+previewScale/100.0+')';
 	// previewDocument.body.style.transformOrigin = '0 0';
 	// previewDocument.body.style.margin = '0';
@@ -21,8 +31,8 @@ function runInDisplay(action) {
 	// console.log('no display');
 	// try to open an existing window and kill it
 	// If an existing window exists, then the onload event won't fire.
-	display = window.open('', 'display');
-	if (display) { display.close();	}
+	// display = window.open('', 'display');
+	// if (display) { display.close();	}
 	display = window.open('display.html', 'display');
 	display.onload = function(){
 	    // console.log('onload');
@@ -41,7 +51,7 @@ function runInDisplay(action) {
     display.onresize=sizePreview;
 }
 
-function $(id){return document.getElementById(id);}
+
 function escapeHtml(unsafe) {
     return unsafe
          .replace(/&/g, "&amp;")
@@ -76,7 +86,7 @@ function myhtml() {
 	document.querySelector('input[name="style"]:checked').value+
 	"body {padding:1em; margin:0; white-space:pre-wrap;}"+
 	"</style>"+
-	emphasize(escapeHtml($("content").value));
+	emphasize(escapeHtml($("#content").val()));
 }
 
 function getPreviewDocument() {
@@ -123,7 +133,7 @@ document.body.innerHTML +=
 
     
 function updateFontSize(s){
-    var size = $('fontSize').innerText = s+'em';
+    var size = $('#fontSize').innerText = s+'em';
     runInDisplay(function(d) {
 	var b = d.document.body;
 	b.style.fontSize = size;
