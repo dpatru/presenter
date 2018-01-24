@@ -1,8 +1,39 @@
 <html>
-  <head>
+  <head><script src="vue.js"></script></head>
+  <body><div id="presenter">
+      <div id="controlPane" style="float:left">
+	<input id="myFile" type="file" onchange="loadFile()"/>
+	<textarea id="content" style="display:block"
+		  v-model="raw" placeholder="Put text here."></textArea>
+	<button v-on:click="updateDisplay">Update Display</button>
+	<br>
+	<label>scale
+	  <span id="previewScaleText">{{previewZoom}}%</span>
+	  <input id="previewScale" type="range" min="1" max="100" step="1"
+		 v-model="previewZoom">
+	</label>
+	<br>
+	<label>fontSize
+	  <span id="fontSize">{{display.fontSize}} em</span>
+	  <input type="range" min="1" max="10" step=".1" value="1" v-model="display.fontSize">
+	</label>
+	<br>
+	<label>
+	  <input name="style" type="radio" value="blackOnWhite" v-model="displayStyle">
+	  black on white
+	</label>
+	<br>
+	<label>
+	  <input name="style" type="radio" value="whiteOnBlack" v-model="displayStyle">
+	  white on black
+	</label>
+      </div>
+      
+      <div id="previewPane" style="float:right">
+    	<iframe id="preview" v-bind:style="previewStyle" v-bind:srcdoc="previewInnerHTML"></iframe>
+      </div>
+    </div>
     <script src="jquery-3.3.1.js"></script>
-  </head>
-  <body>
     <script src="present.js"></script>
   </body>
 </html>

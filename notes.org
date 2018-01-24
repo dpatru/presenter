@@ -1,0 +1,11 @@
+* Development Notes
+
+** watching http server 
+
+Install a watching http server. 
+
+See https://www.npmjs.com/package/watch-http-server.
+
+Run as =watch-http-server=. 
+
+
