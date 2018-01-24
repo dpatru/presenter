@@ -1,6 +1,7 @@
 <html>
   <head><script src="vue.js"></script></head>
-  <body><div id="presenter">
+  <body>
+    <div style="display:block" id="presenter">
       <div id="controlPane" style="float:left">
 	<input id="myFile" type="file" onchange="loadFile()"/>
 	<textarea id="content" style="display:block"
@@ -8,8 +9,8 @@
 	<button v-on:click="updateDisplay">Update Display</button>
 	<br>
 	<label>scale
-	  <span id="previewScaleText">{{previewZoom}}%</span>
-	  <input id="previewScale" type="range" min="1" max="100" step="1"
+	  <span id="previewScaleText">{{previewZoom*100}}%</span>
+	  <input id="previewScale" type="range" min=".01" max="1" step=".01"
 		 v-model="previewZoom">
 	</label>
 	<br>
@@ -18,20 +19,16 @@
 	  <input type="range" min="1" max="10" step=".1" value="1" v-model="display.fontSize">
 	</label>
 	<br>
-	<label>
-	  <input name="style" type="radio" value="blackOnWhite" v-model="displayStyle">
-	  black on white
-	</label>
+	<label><input name="style" type="radio" value="blackOnWhite" v-model="displayStyle">
+	  black on white</label>
 	<br>
-	<label>
-	  <input name="style" type="radio" value="whiteOnBlack" v-model="displayStyle">
-	  white on black
-	</label>
+	<label><input name="style" type="radio" value="whiteOnBlack" v-model="displayStyle">
+	  white on black</label>
       </div>
       
-      <div id="previewPane" style="float:right">
-    	<!-- <iframe id="preview" v-bind:style="previewStyle" v-bind:srcdoc="previewInnerHTML"></iframe> -->
-    	<iframe id="preview" v-bind:style="previewStyle" src="display.html"></iframe>
+      <div id="previewPane" v-bind:style="basePreviewStyle">
+    	<div id="preview" class="content" v-bind:style="previewStyle" v-html="innerHTML"></div>
+	
       </div>
     </div>
     <script src="jquery-3.3.1.js"></script>
