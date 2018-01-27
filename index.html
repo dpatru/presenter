@@ -1,8 +1,11 @@
 <html>
-  <head><script src="vue.js"></script></head>
+  <head>
+    <script src="vue.js"></script>
+    <script src="vue-select.js"></script>
+  </head>
   <body>
     <div style="display:block" id="presenter">
-      <div id="controlPane" style="float:left">
+      <div id="controlPane" v-bind:style="controlStyle">
 	<input id="myFile" type="file" onchange="loadFile()"/>
 	<textarea id="content" style="display:block"
 		  v-model="raw" placeholder="Put text here."></textArea>
@@ -19,16 +22,28 @@
 	  <input type="range" min="1" max="10" step=".1" value="1" v-model="display.fontSize">
 	</label>
 	<br>
-	<label><input name="style" type="radio" value="blackOnWhite" v-model="displayStyle">
-	  black on white</label>
-	<br>
-	<label><input name="style" type="radio" value="whiteOnBlack" v-model="displayStyle">
-	  white on black</label>
+	<label>display style
+	  <select v-model="display.style">
+	    <option v-for="s in display.styles" v-bind:value="s.value">
+	      {{ s.label }}
+	    </option>
+	</select></label>
+
+	</label>
       </div>
-      
-      <div id="previewPane" v-bind:style="basePreviewStyle">
-    	<div id="preview" class="content" v-bind:style="previewStyle" v-html="innerHTML"></div>
-	
+      <div id="previewWrapper" v-bind:style="previewWrapperStyle">
+	<div id="previewPane" v-bind:class="display.style" v-bind:style="basePreviewStyle">
+    	  <div id="preview" class="content" v-bind:style="previewStyle" v-html="innerHTML"></div>
+	</div>
+      </div>
+      <div style="display: block" id="history">
+	<h1>History</h1>
+	<div style="display:inline-block; outline:1px solid red; vertical-align:top; margin-left:1em" v-for="(x,i) in history" v-bind:style="previewWrapperStyle">
+	  <div class="content" v-bind:class="x.style" v-bind:style="basePreviewStyle">
+	    <div id="preview" class="content" v-bind:style="previewStyle" v-html="x.innerHTML">
+	    </div>
+	  </div>
+	</div>	  
       </div>
     </div>
     <script src="jquery-3.3.1.js"></script>
