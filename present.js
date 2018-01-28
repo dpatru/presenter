@@ -21,36 +21,81 @@ var displayStyles = [
     { label: 'Black on White', value: 'blackOnWhite'},
     { label: 'White on Black', value: 'whiteOnBlack'}
 ];
-    // { label: 'Black on White',
-    //   style: ".content {color:black; background-color:white; padding:1em; margin:0; white-space:pre-wrap} .content em.hilite {font-style:normal; background:yellow} .content em.bold {font-style:normal; color:red}"},
-    // { label: 'White on Black',
-    //   style: ".content {color:white; background-color:black; padding:1em; margin:0; white-space:pre-wrap} .content em.hilite {font-style: normal; color:yellow} .content em.bold {font-style:normal;color:lightcoral}"
-    // }];
+/*
+We want to be able to:
+- Set the padding. Padding should be constant no matter the font size. 
+We can do this by setting the font size in pixels, not ems.
+- Set the font size. 
+ */
 
 var app = new Vue({
     el: "#presenter",
     data: {
 	display: {
 	    height:100, width: 100, scrollTop:0, scrollLeft:0, window:0, fontSize:1,
-	    styles: displayStyles, style: displayStyles[0].value,
-	    styleSheet: ".content {margin:0; padding:1em} .blackOnWhite {color:black; background-color:white; white-space:pre-wrap} .blackOnWhite em.hilite {font-style:normal; background:yellow} .blackOnWhite em.bold {font-style:normal; color:red} .whiteOnBlack {color:white; background-color:black; white-space:pre-wrap} .whiteOnBlack em.hilite {font-style: normal; color:yellow} .whiteOnBlack em.bold {font-style:normal;color:lightcoral}"
+	    styles: displayStyles, style: displayStyles[0].value, padding:16,
+	    styleSheet: ".content {white-space:pre-wrap} .blackOnWhite {color:black; background-color:white;} .blackOnWhite em.hilite {font-style:normal; background:yellow} .blackOnWhite em.bold {font-style:normal; color:red} .whiteOnBlack {color:white; background-color:black;} .whiteOnBlack em.hilite {font-style: normal; color:yellow} .whiteOnBlack em.bold {font-style:normal;color:lightcoral}"
 	},
 	raw: '',
+	interactive: false,
 	history: [],
 	previewZoom: .5,
     },
+    watch: {
+	'display.padding': function(val){ if (this.interactive) {this.updateDisplayPadding(); }},
+	'display.fontSize': function(val){ if (this.interactive) {this.updateDisplayFontSize(); }},
+	'display.style': function(val){ if (this.interactive) {this.updateDisplayStyle(); }},
+	'innerHTML': function(val, oldval) {
+	    if (this.interactive && val != oldval) {
+		this.updateDisplayInnerHTML();
+	    }
+	}
+	
+    },
     methods: {
-	updateDisplay: function() {
-	    var w = this.getDisplay();
+	updateDisplayPadding: function() {
+	    var w = this.display.window;
+	    if (w){
+		w.document.body.style.padding = this.display.padding+'px';
+	    }
+	},
+	updateDisplayFontSize: function() {
+	    var w = this.display.window;
+	    if (w) {
+		w.document.body.style.fontSize = this.display.fontSize+'em';
+	    }
+	},
+	updateDisplayInnerHTML: function() {
+	    var w = this.display.window;
 	    if (w) {
 		w.document.body.innerHTML = this.innerHTML;
-		w.document.body.className = this.display.style;
-		this.updateDisplaySize();
-		this.history.push({
-		    raw: this.raw,
-		    style: this.display.style,
-		    fontSize: this.fontSize,
-		    innerHTML: this.innerHTML });
+	    }
+	},
+	updateDisplayStyle: function() {
+	    var w = this.display.window;
+	    if (w) {
+	    	w.document.body.className = "content " + this.display.style;
+	    }
+	},
+	updateDisplay: function() {
+	    var w = this.getDisplay();
+	    this.updateDisplayStyle();
+	    this.updateDisplayInnerHTML();
+	    this.updateDisplayPadding();
+	    this.updateDisplayFontSize();
+	    this.updateDisplaySize();
+	    if (w) {
+	    // 	w.document.body.innerHTML =
+	    // 	    '<style>body{padding:'+this.display.padding+'px}</style>'+
+	    // 	    this.innerHTML;
+	    // 	w.document.body.className = "content this.display.style";
+	    // 	this.updateDisplaySize();
+	    	this.history.push({
+	    	    raw: this.raw,
+	    	    style: this.display.style,
+	    	    fontSize: this.fontSize,
+	    	    padding: this.display.padding,
+	    	    innerHTML: this.innerHTML });
 	    }
 	},
 	getDisplay: function() {
@@ -76,23 +121,23 @@ var app = new Vue({
 	updateDisplayScroll: function() {
 	    console.log('scrolling');
 	    var w = this.display.window;
-	    
 	    if (w) {
 		this.display.scrollTop = w.document.body.scrollTop;
 		this.display.scrollLeft = w.document.body.scrollLeft;
 		console.log('scrollTop', w.document.body.scrollTop);
 	    }
+	},
+	deleteHistoryItem:function(i) {
+	    console.log('removing history item', i);
+	    this.history.splice(i,1);
 	}
-	    
     },
     computed: {
 	styleSheet: function() {
 	    return '<style scoped>'+this.display.styleSheet+'</style>';
 	},
 	innerHTML: function() {
-	    return this.styleSheet +
-		'<div style="outline:0px solid red; font-size:'+this.display.fontSize+'em">'+
-		emphasize(escapeHtml(this.raw))+'</div>';
+	    return this.styleSheet + emphasize(escapeHtml(this.raw));
 	},
 	controlStyle: function () {
 	    return {
@@ -111,19 +156,19 @@ var app = new Vue({
 		position: 'relative', display: 'inline-block',
 		height: Math.max(el.height,Math.round(this.display.height*this.previewZoom)),
 		width: Math.max(el.width,Math.round(this.display.width*this.previewZoom)),
-		backgroundColor: 'green',
+		// backgroundColor: 'green',
 		overflow: 'hidden',
 		outline: '1px solid green'
 	    };
 	},
-	basePreviewStyle: function(){ // scaling happens here
+	basePreviewStyle: function(){ // scaling happens here, can this be combined with previewStyle?
 	    return {
 		// float:'right',
 		// position:'absolute', right:0, top:0,
 		display:'inline-block',
 		outline:'1px solid gray',
 		transform: 'scale('+this.previewZoom+')', transformOrigin: 'top left',
-		margin:0, padding:0, overflow:'hidden'
+		margin:0, padding:this.display.padding+'px', overflow:'hidden'
 		// zoom: this.previewZoom,
 	    };
 	},
@@ -133,6 +178,7 @@ var app = new Vue({
 		boxSizing:'border-box',
 		height:this.display.height,
 		width:this.display.width,
+		fontSize:this.display.fontSize+'em',
 		// zoom: this.previewZoom,
 		overflow:'auto'
 	    };

@@ -1,7 +1,6 @@
 <html>
   <head>
     <script src="vue.js"></script>
-    <script src="vue-select.js"></script>
   </head>
   <body>
     <div style="display:block" id="presenter">
@@ -10,6 +9,7 @@
 	<textarea id="content" style="display:block"
 		  v-model="raw" placeholder="Put text here."></textArea>
 	<button v-on:click="updateDisplay">Update Display</button>
+	<label><input type="checkbox" v-model="interactive"> Interactive</label>
 	<br>
 	<label>scale
 	  <span id="previewScaleText">{{previewZoom*100}}%</span>
@@ -20,6 +20,11 @@
 	<label>fontSize
 	  <span id="fontSize">{{display.fontSize}} em</span>
 	  <input type="range" min="1" max="10" step=".1" value="1" v-model="display.fontSize">
+	</label>
+	<br>
+	<label>padding
+	  <span id="padding">{{display.padding}} px</span>
+	  <input type="range" min="0" max="100" step="1" v-model="display.padding">
 	</label>
 	<br>
 	<label>display style
@@ -40,6 +45,7 @@
 	<h1>History</h1>
 	<div style="display:inline-block; outline:1px solid red; vertical-align:top; margin-left:1em" v-for="(x,i) in history" v-bind:style="previewWrapperStyle">
 	  <div class="content" v-bind:class="x.style" v-bind:style="basePreviewStyle">
+	    <div style="position:absolute; top:0; left:0" v-on:click="deleteHistoryItem(i)">X</div>
 	    <div id="preview" class="content" v-bind:style="previewStyle" v-html="x.innerHTML">
 	    </div>
 	  </div>
