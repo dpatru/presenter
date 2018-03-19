@@ -1,3 +1,10 @@
+Vue.component('navigation', {
+    template: '<div> Navigation Template </div>',
+    data: function() { return {}; }
+});
+
+
+
 function escapeHtml(unsafe) {
     return unsafe
          .replace(/&/g, "&amp;")
@@ -43,13 +50,18 @@ var app = new Vue({
 	    if (!this.display.window || this.display.window.closed) {
 		this.display.window = window.open('display.html', 'display');
 	    }
-	    var me = this;
-	    var w = this.display.window;
-	    w.onresize=function(){me.updateDisplaySize();};
-	    w.document.onscroll=function(){
-		me.updateDisplayScroll();
-	    };
-	    return this.display.window;
+	    if (!this.display.window) {
+		    console.log('null display.window');
+	    }
+	    else {
+		var me = this;
+		var w = this.display.window;
+		w.onresize=function(){me.updateDisplaySize();};
+		w.document.onscroll=function(){
+		    me.updateDisplayScroll();
+		};
+		return this.display.window;
+	    }
 	},
 	updateDisplaySize: function() {
 	    var w = this.display.window;
