@@ -13,10 +13,10 @@
     </style>
     <div id="presenter">
       <draggable v-model="history" :move="reorderHistory" element="div" id="navigation">
-	<div v-for="(item, index) in history" v-bind:style="historyItemStyleWrapper(item)" oncontextmenu="console.log('right click'); return false;">
-	  <div v-bind:style="historyItemStyle(item)" >
-	    <div v-bind:style="slideStyle(item)"
-		 v-html="slides[item].html"></div>
+	<div v-for="(item, index) in history" v-bind:style="historyItemStyleWrapper(index)" oncontextmenu="console.log('right click'); return false;">
+	  <div v-bind:style="historyItemStyle(index)" >
+	    <div v-bind:style="slideStyle(index)"
+		 v-html="item.html"></div>
 	  </div>
 	</div>
     </draggable>
@@ -33,8 +33,10 @@
 	<tr><td>
 	    <input id="myFile" type="file" onchange="loadFile()"/>
 	    
-	    <textarea id="content" style="display:block; box-sizing: border-box; width:100%"
-		      v-model="slides[history[editing]].html" placeholder="Put text here.">
+	    <textarea id="content"
+		      style="display:block; box-sizing: border-box; width:100%"
+		      v-model="history[editing].html"
+		      placeholder="Put text here.">
 	    </textArea>
 	    
 	    <button v-on:click="updateDisplay">Update Display</button>
@@ -55,35 +57,35 @@
 	    <br>
 	    <label>fontSize
 	      <span id="fontSize">{{history[editing].fontSize}} em</span>
-	      <input type="range" min="1" max="10" step=".1" value="1" v-model="slides[history[editing]].fontSize">
+	      <input type="range" min="1" max="10" step=".1" value="1" v-model="history[editing].fontSize">
 	    </label>
 	    <br>
 	    <label>padding
 	      <span id="padding">{{history[editing].padding}} px</span>
-	      <input type="range" min="0" max="100" step="1" v-model="slides[history[editing]].padding">
+	      <input type="range" min="0" max="100" step="1" v-model="history[editing].padding">
 	    </label>
 	    <br>
 	    <label>
-	      <input name="colors" type="radio" value="blackOnWhite" v-model="slides[history[editing]].colors">
+	      <input name="colors" type="radio" value="blackOnWhite" v-model="history[editing].colors">
 	  black on white
 	    </label>
 	    <br>
 	    <label>
-	      <input name="colors" type="radio" value="whiteOnBlack" v-model="slides[history[editing]].colors">
+	      <input name="colors" type="radio" value="whiteOnBlack" v-model="history[editing].colors">
 	      white on black
 	    </label>
 	  </td><td id="renderArea">
-	    <div v-bind:style="renderAreaStyleWrapper(history[editing])">
-	      <div v-bind:style="renderAreaStyle(history[editing])" >
-		<div v-bind:style="slideStyle(history[editing])"
-		     v-html="slides[history[editing]].html"></div>
+	    <div v-bind:style="renderAreaStyleWrapper(editing)">
+	      <div v-bind:style="renderAreaStyle(editing)" >
+		<div v-bind:style="slideStyle(editing)"
+		     v-html="history[editing].html"></div>
 	      </div>
 	    </div>
 	  </td><td id="displayArea">
-	    <div v-bind:style="displayAreaStyleWrapper(history[displaying])">
-	      <div v-bind:style="displayAreaStyle(history[displaying])" >
-		<div v-bind:style="slideStyle(history[displaying])"
-		     v-html="slides[history[displaying]].html"></div>
+	    <div v-bind:style="displayAreaStyleWrapper(displaying)">
+	      <div v-bind:style="displayAreaStyle(displaying)" >
+		<div v-bind:style="slideStyle(displaying)"
+		     v-html="history[displaying].html"></div>
 	      </div>
 	    </div>
       </td></tr></table>

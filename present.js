@@ -44,11 +44,9 @@ var app = new Vue({
     data: {
 	list: ['one','two','three'],
 	historyItemZoom: .15,
-	slides: {
-	    n: 2,
-	    0: {html: 'one', colors: 'blackOnWhite', fontSize: 1, padding: 10},
-	    1: {html: 'two', colors: 'whiteOnBlack', fontSize: 1, padding: 10}},
-	history: [0,1],
+	history: [
+	    {html: 'one', colors: 'blackOnWhite', fontSize: 1, padding: 10},
+	    {html: 'two', colors: 'whiteOnBlack', fontSize: 1, padding: 10}],
 	displaying: 0,
 	editing: 0,
 	renderArea: {height:0, width: 0},
@@ -81,7 +79,7 @@ var app = new Vue({
 	},
 
 	colors: function(n){
-	    var colors = this.slides[n].colors;
+	    var colors = this.history[n].colors;
 	    return {
 		background: colors=='blackOnWhite'? 'white':
 		    colors=='whiteOnBlack'? 'black': 'purple',
@@ -98,8 +96,8 @@ var app = new Vue({
 	    }
 	    return merge(this.colors(n), {
 		display: "inline-block",
-		borderBottom: (this.history[this.displaying]==n? 'green': 'white') + ' solid .3em',
-		borderTop: (this.history[this.editing]==n? 'red': 'white') + ' solid .3em',
+		borderBottom: (this.displaying==n? 'green': 'white') + ' solid .3em',
+		borderTop: (this.editing==n? 'red': 'white') + ' solid .3em',
 		// outline: "green solid 1px",
 		overflow: "hidden",
 		fontSize: "1em",
@@ -253,7 +251,7 @@ var app = new Vue({
 	    });
 	},
 	slideStyle: function(n) {
-	    var slide = this.slides[n];
+	    var slide = this.history[n];
 	    return merge(this.colors(n), {
 		padding: slide.padding+'px',
 		margin: 0,
