@@ -4,6 +4,12 @@
     <script src="vue.js"></script>
     <script src="Sortable.js"></script>
     <script src="vuedraggable.js"></script>
+    <script src="vue-context-menu.js"></script>
+    <script>
+      // install globally as <context-menu> </context-menu>
+      Vue.use(VueContextMenu);
+    </script>
+
     
   </head>
   <body>
@@ -12,8 +18,45 @@
       table td { outline: solid red 1px }
     </style>
     <div id="presenter">
-      <draggable v-model="history" :move="reorderHistory" element="div" id="navigation">
-	<div v-for="(item, index) in history" v-bind:style="historyItemStyleWrapper(index)" oncontextmenu="console.log('right click'); return false;">
+      <context-menu ref="ctx"
+	@ctx-open="onCtxOpen"
+	@ctx-cancel="resetCtxLocals"
+	@ctx-close="onCtxClose">
+        <li class="ctx-header"
+	    v-if="contextMenuData.index != editing"
+	    @click="editing = contextMenuData.index">
+	  Edit
+	</li>
+        <li class="ctx-header"
+	    v-if="contextMenuData.index != displaying"
+	    @click="displaying = contextMenuData.index">
+	  Display
+	</li>
+        <li class="ctx-header"
+	    @click="duplicateSlide(contextMenuData.index)">
+	  Duplicate this slide
+	</li>
+        <li class="ctx-header"
+	    @click="insertNewSlide(contextMenuData.index)">
+	  Insert new slide before this one
+	</li>
+        <li class="ctx-header"
+	    @click="insertNewSlide(contextMenuData.index+1)">
+	  Append new slide after this one
+	</li>
+        <li class="ctx-header" v-if="history.length > 1"
+	    @click="confirm('Really delete?') && deleteSlide(contextMenuData.index)">
+	  Delete
+	</li>
+      </context-menu>
+      
+      <draggable v-model="history" :move="reorderHistory"
+		 element="div" id="navigation">
+	<div v-for="(item, index) in history" :key="item.id"
+	     v-bind:style="historyItemStyleWrapper(index)"
+	     v-on:click="clickHistory(index)"
+	     v-on:dblclick="dblclickHistory(index)"
+	     @contextmenu.prevent="$refs.ctx.open($event, {item: item, index: index})">
 	  <div v-bind:style="historyItemStyle(index)" >
 	    <div v-bind:style="slideStyle(index)"
 		 v-html="item.html"></div>

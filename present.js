@@ -45,8 +45,11 @@ var app = new Vue({
 	list: ['one','two','three'],
 	historyItemZoom: .15,
 	history: [
-	    {html: 'one', colors: 'blackOnWhite', fontSize: 1, padding: 10},
-	    {html: 'two', colors: 'whiteOnBlack', fontSize: 1, padding: 10}],
+	    {id: 0, html: 'one', colors: 'blackOnWhite',
+	     fontSize: 1, padding: 10},
+	    {id: 1, html: 'two', colors: 'whiteOnBlack',
+	     fontSize: 1, padding: 10}],
+	nextSlide: 2,
 	displaying: 0,
 	editing: 0,
 	renderArea: {height:0, width: 0},
@@ -54,9 +57,104 @@ var app = new Vue({
 	display: {height:100, width: 100, scrollTop:0, scrollLeft:0, window:0, fontSize:1},
 	raw: '',
 	previewZoom: 50,
-	displayStyle: 'blackOnWhite'
+	displayStyle: 'blackOnWhite',
+	contextMenuData: {},
+	clicked: false,
+	clickDelay: 10
     },
     methods: {
+	onCtxOpen: function (locals) {
+            console.log('open', locals)
+            this.contextMenuData = locals
+	},
+
+	onCtxClose: function(locals) {
+            //console.log('close', locals)
+	},
+
+	resetCtxLocals: function() {
+            //this.menuData = newMenuData()
+	},
+
+	logClick: function(e,context) {
+            //this.contextClicks.push(Object.assign({},this.menuData))
+            //return logger('click')(context)
+	},
+
+	sayColor: function(color) {
+            window.alert('left click on ' + color)
+	},
+
+	newSlide: function(i) {
+	    var s = {
+		id: this.nextSlide++, html: '', colors: 'blackOnWhite', fontSize: 1, padding: 10
+	    };
+	    if (i in this.history) {
+		var d = this.history[i];
+		s.html = d.html;
+		s.colors = d.colors;
+		s.fontSize = d.fontSize;
+		s.padding = d.padding;
+	    }
+	    return s;
+	},
+	    
+	insertNewSlide: function(position, duplicate) {
+	    console.log("inserting at", position);
+	    this.history.splice(position, 0, this.newSlide(duplicate? position: -1));
+	    for (var p of ['editing', 'displaying']) {
+		if (position <= this[p]) {
+		    this[p] += 1;
+		}
+	    }
+	},
+
+	duplicateSlide: function(position) {
+	    return this.insertNewSlide(position, true);
+	},
+
+	deleteSlide: function(position) {
+	    if (this.history.length < 2) { return; }
+	    for (var p of ['editing', 'displaying']) {
+		if (position < this[p] ||
+		    position == this[p] &&
+		    position == this.history.length - 1) {
+		    this[p] -= 1;
+		}
+	    }
+	    console.log('removing slide '+position);
+	    console.log(this.history.length);
+	    this.history.splice(position, 1);
+	    console.log(this.history.length);
+
+	},
+
+	confirm: function(msg) {
+	    return window.confirm(msg);
+	},
+
+	clickHistory: function(index) {
+	    console.log('clickHistory');
+	    if (this.clicked) return;
+	    this.clicked = true;
+	    var self = this;
+	    setTimeout(function() {
+		console.log('clickHistory timeout', index);
+		if (self.clicked) {
+		    self.editing = index;
+		    self.clicked = false;
+		}
+	    }, self.clickDelay);
+	},
+
+	dblclickHistory: function(index) {
+	    console.log('dblclickHistory');
+	    if (this.clicked) {
+		this.clicked = false;
+		this.displaying = index;
+	    }
+	},
+	    
 	reorderHistory: function(onMoveEvent) {
 	    // adjust editing and displaying pointers after a
 	    // reordering of the history array.u
@@ -96,6 +194,7 @@ var app = new Vue({
 	    }
 	    return merge(this.colors(n), {
 		display: "inline-block",
+		outline: "red solid 1px",
 		borderBottom: (this.displaying==n? 'green': 'white') + ' solid .3em',
 		borderTop: (this.editing==n? 'red': 'white') + ' solid .3em',
 		// outline: "green solid 1px",
