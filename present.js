@@ -1,6 +1,16 @@
+function merge(){
+    var o = {};
+    for (var i = 0; i < arguments.length; i++){
+	for (var k in arguments[i]) {
+	    o[k] = arguments[i][k];
+	}
+    }
+    return o; 
+}
+
 Vue.component('navigation', {
-    template: '<div> Navigation Template </div>',
-    data: function() { return {}; }
+    template: '<div style="outline: red solid 1px"> Navigation Template </div>'
+    // data: function() { return {}; }
 });
 
 
@@ -32,13 +42,229 @@ var displayStyleSheet = {
 var app = new Vue({
     el: "#presenter",
     data: {
+	list: ['one','two','three'],
+	historyItemZoom: .15,
+	slides: {
+	    n: 2,
+	    0: {html: 'one', colors: 'blackOnWhite', fontSize: 1, padding: 10},
+	    1: {html: 'two', colors: 'whiteOnBlack', fontSize: 1, padding: 10}},
+	history: [0,1],
+	displaying: 0,
+	editing: 0,
+	renderArea: {height:0, width: 0},
+	displayArea: {height:0, width: 0},
 	display: {height:100, width: 100, scrollTop:0, scrollLeft:0, window:0, fontSize:1},
 	raw: '',
-	history: [],
 	previewZoom: 50,
 	displayStyle: 'blackOnWhite'
     },
     methods: {
+	reorderHistory: function(onMoveEvent) {
+	    // adjust editing and displaying pointers after a
+	    // reordering of the history array.u
+	    var i = onMoveEvent.draggedContext.index;
+	    var j = onMoveEvent.draggedContext.futureIndex;
+	    for (var p of ['editing','displaying']){
+		console.log('checking '+p);
+		if (i < this[p] && this[p] <= j) {
+		    this[p] -= 1;
+		}
+		else if (i == this[p]) { this[p] = j; }
+		else if (j <= this[p] && this[p] < i) {
+		    this[p] += 1;
+		}
+	    }
+	},
+	onUpdate: function (event) {
+	    this.list.splice(event.newIndex, 0,
+				this.list.splice(event.oldIndex, 1)[0]);
+	},
+
+	colors: function(n){
+	    var colors = this.slides[n].colors;
+	    return {
+		background: colors=='blackOnWhite'? 'white':
+		    colors=='whiteOnBlack'? 'black': 'purple',
+		color: colors=='blackOnWhite'? 'black':
+		    colors=='whiteOnBlack'? 'white': 'yellow'
+	    };
+	},
+	historyItemStyleWrapper: function(n){
+	    // set the size, but not the zoom level
+	    var w = this.getDisplay();
+	    if (!w) {
+		console.log("historyItemStyle: ERROR: couldn't get display");
+		return {};
+	    }
+	    return merge(this.colors(n), {
+		display: "inline-block",
+		borderBottom: (this.history[this.displaying]==n? 'green': 'white') + ' solid .3em',
+		borderTop: (this.history[this.editing]==n? 'red': 'white') + ' solid .3em',
+		// outline: "green solid 1px",
+		overflow: "hidden",
+		fontSize: "1em",
+		'text-size-adjust': "auto",
+		'font-size-adjust': "auto",
+		'textSizeAdjust': "auto",
+		'fontSizeAdjust': "auto",
+		'-webkit-text-size-adjust': "auto",
+		width: w.document.body.clientWidth * this.historyItemZoom +'px',
+		height: w.document.body.clientHeight * this.historyItemZoom +'px',
+		marginRight: this.historyItemZoom * 4 +'em'
+	    });
+	},
+	historyItemStyle: function(n){
+	    // set the zoom level
+	    var w = this.getDisplay();
+	    if (!w) {
+		console.log("historyItemStyle: ERROR: couldn't get display");
+		return {};
+	    }
+	    return merge(this.colors(n), {
+		// outline: "red solid 2px",
+		// overflow: "hidden",
+		// zoom: this.historyItemZoom,
+		transform: "scale("+this.historyItemZoom+")",
+		transformOrigin: "top left",
+		// fontSize: "1em",
+		// 'text-size-adjust': "auto",
+		// 'font-size-adjust': "auto",
+		// 'textSizeAdjust': "auto",
+		// 'fontSizeAdjust': "auto",
+		// '-webkit-text-size-adjust': "auto",
+		width: w.document.body.clientWidth +'px',
+		height: w.document.body.clientHeight +'px'
+	    });
+	},
+	renderAreaScale: function() {
+	    var w = this.getDisplay();
+	    if (!w) {
+		console.log("renderAreaScale: ERROR: couldn't get display");
+		return -1;
+	    }
+	    return this.renderArea.width / w.document.body.clientWidth;
+	},
+	renderAreaStyleWrapper: function(n){
+	    // set the size, but not the zoom level
+	    var w = this.getDisplay();
+	    if (!w) {
+		console.log("renderAreaStyleWrapper: ERROR: couldn't get display");
+		return {};
+	    }
+	    var s = this.renderAreaScale();
+	    if (s < 0) {
+		console.log("renderAreaStyleWrapper: ERROR: couldn't get scale");
+		return {};
+	    }
+	    return merge(this.colors(n), {
+		display: "inline-block",
+		outline: "green solid 1px",
+		overflow: "hidden",
+		fontSize: "1em",
+		'text-size-adjust': "auto",
+		'font-size-adjust': "auto",
+		'textSizeAdjust': "auto",
+		'fontSizeAdjust': "auto",
+		'-webkit-text-size-adjust': "auto",
+		width: this.renderArea.width +'px',
+		height: w.document.body.clientHeight * s +'px'
+	    });
+	},
+	renderAreaStyle: function(n){
+	    // set the zoom level
+	    var w = this.getDisplay();
+	    if (!w) {
+		console.log("renderAreaStyle: ERROR: couldn't get display");
+		return {};
+	    }
+	    return merge(this.colors(n), {
+		display: "inline-block",
+		outline: "red solid 1px",
+		overflow: "hidden",
+		// zoom: this.historyItemZoom,
+		transform: "scale("+this.renderAreaScale+")",
+		transformOrigin: "top left",
+		fontSize: "1em",
+		'text-size-adjust': "auto",
+		'font-size-adjust': "auto",
+		'textSizeAdjust': "auto",
+		'fontSizeAdjust': "auto",
+		'-webkit-text-size-adjust': "auto",
+		width: w.document.body.clientWidth +'px',
+		height: w.document.body.clientHeight +'px'
+	    });
+	},
+	displayAreaScale: function() {
+	    var w = this.getDisplay();
+	    if (!w) {
+		console.log("displayAreaScale: ERROR: couldn't get display");
+		return -1;
+	    }
+	    return this.displayArea.width / w.document.body.clientWidth;
+	},
+	displayAreaStyleWrapper: function(n){
+	    // set the size, but not the zoom level
+	    var w = this.getDisplay();
+	    if (!w) {
+		console.log("displayAreaStyleWrapper: ERROR: couldn't get display");
+		return {};
+	    }
+	    var s = this.displayAreaScale();
+	    if (s < 0) {
+		console.log("displayAreaStyleWrapper: ERROR: couldn't get scale");
+		return {};
+	    }
+	    return merge(this.colors(n), {
+		display: "inline-block",
+		outline: "green solid 1px",
+		overflow: "hidden",
+		fontSize: "1em",
+		'text-size-adjust': "auto",
+		'font-size-adjust': "auto",
+		'textSizeAdjust': "auto",
+		'fontSizeAdjust': "auto",
+		'-webkit-text-size-adjust': "auto",
+		width: this.displayArea.width +'px',
+		height: w.document.body.clientHeight * s +'px'
+	    });
+	},
+	displayAreaStyle: function(n){
+	    // set the zoom level
+	    var w = this.getDisplay();
+	    if (!w) {
+		console.log("displayAreaStyle: ERROR: couldn't get display");
+		return {};
+	    }
+	    return merge(this.colors(n), {
+		display: "inline-block",
+		outline: "red solid 1px",
+		overflow: "hidden",
+		// zoom: this.historyItemZoom,
+		transform: "scale("+this.displayAreaScale+")",
+		transformOrigin: "top left",
+		fontSize: "1em",
+		'text-size-adjust': "auto",
+		'font-size-adjust': "auto",
+		'textSizeAdjust': "auto",
+		'fontSizeAdjust': "auto",
+		'-webkit-text-size-adjust': "auto",
+		width: w.document.body.clientWidth +'px',
+		height: w.document.body.clientHeight +'px'
+	    });
+	},
+	slideStyle: function(n) {
+	    var slide = this.slides[n];
+	    return merge(this.colors(n), {
+		padding: slide.padding+'px',
+		margin: 0,
+		whiteSpace: 'pre-wrap',
+		fontSize: slide.fontSize+'em'
+	    });
+	},
+	updateDisplayArea: function() {
+	    this.display.width = $("#displayArea").width();
+	    this.display.height = $("#displayArea").height();
+	},
 	updateDisplay: function() {
 	    var w = this.getDisplay();
 	    if (w) {
@@ -143,6 +369,31 @@ var app = new Vue({
     }
 });
 
+// from  https://wicg.github.io/ResizeObserver/#algorithms
+var areaRO = new ResizeObserver( function(entries) {
+    for (let entry of entries) {
+	// let cs = window.getComputedStyle(entry.target);
+	let cs = entry.target.getBoundingClientRect();
+	console.log('watching element:', entry.target);
+	console.log(entry.contentRect.width,' is ', cs.width);
+	console.log(entry.contentRect.height,' is ', cs.height);
+	//console.log(entry.contentRect.top,' is ', cs.paddingTop);
+	//console.log(entry.contentRect.left,' is ', cs.paddingLeft);
+	var id = entry.target.id;
+	if (id && id in app) {
+            app[id].width = cs.width;
+	    app[id].height = cs.height;
+	}
+	else {
+	    console.log(id+' not in app');
+	}
+	
+    }
+});
+areaRO.observe(document.querySelector('#displayArea'));
+areaRO.observe(document.querySelector('#renderArea'));
+
+    
 // function sizePreview(){
 //     var previewScale = document.getElementById('previewScale').value;
 //     document.getElementById('previewScaleText').innerText = previewScale+'%';

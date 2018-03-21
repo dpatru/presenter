@@ -1,39 +1,92 @@
+<!DOCTYPE html>
 <html>
-  <head><script src="vue.js"></script></head>
+  <head>
+    <script src="vue.js"></script>
+    <script src="Sortable.js"></script>
+    <script src="vuedraggable.js"></script>
+    
+  </head>
   <body>
-    <navigation></navigation>
+    <style>
+      table { outline: solid red 1px; box-sizing: border-box; width: 100%; table-layout: fixed; border-colapse: collapse }
+      table td { outline: solid red 1px }
+    </style>
     <div id="presenter">
-      <div id="controlPane" style="float:left">
-	<input id="myFile" type="file" onchange="loadFile()"/>
-	<textarea id="content" style="display:block"
-		  v-model="raw" placeholder="Put text here."></textArea>
-	<button v-on:click="updateDisplay">Update Display</button>
-	<br>
-	<label>scale
-	  <span id="previewScaleText">{{previewZoom}}%</span>
-	  <input id="previewScale" type="range" min="1" max="100" step="1"
-		 v-model="previewZoom">
-	</label>
-	<br>
-	<label>fontSize
-	  <span id="fontSize">{{display.fontSize}} em</span>
-	  <input type="range" min="1" max="10" step=".1" value="1" v-model="display.fontSize">
-	</label>
-	<br>
-	<label>
-	  <input name="style" type="radio" value="blackOnWhite" v-model="displayStyle">
+      <draggable v-model="history" :move="reorderHistory" element="div" id="navigation">
+	<div v-for="(item, index) in history" v-bind:style="historyItemStyleWrapper(item)" oncontextmenu="console.log('right click'); return false;">
+	  <div v-bind:style="historyItemStyle(item)" >
+	    <div v-bind:style="slideStyle(item)"
+		 v-html="slides[item].html"></div>
+	  </div>
+	</div>
+    </draggable>
+      <table>
+	<tr>
+	  <th>Edit HTML <label> {{editing}} <br> <input type="range" min="0" :max="history.length-1" v-model="editing"></label>
+	  </th>
+	  <th>Edit Rendered <label> {{editing}} <br> <input type="range" min="0" :max="history.length-1" v-model="editing"></label>
+	  </th>
+	  <th>Displaying
+	    <label> {{displaying}} <br> <input type="range" min="0" :max="history.length-1" v-model="displaying"></label>
+	  </th>
+	</tr>
+	<tr><td>
+	    <input id="myFile" type="file" onchange="loadFile()"/>
+	    
+	    <textarea id="content" style="display:block; box-sizing: border-box; width:100%"
+		      v-model="slides[history[editing]].html" placeholder="Put text here.">
+	    </textArea>
+	    
+	    <button v-on:click="updateDisplay">Update Display</button>
+	    <br>
+	    <label>historyItemZoom
+	      <span id="historyItemZoom">
+		{{ Math.round(historyItemZoom * 100) }}%</span>
+	      <input id="historyItemZoomInput" type="range"
+		     min=".01" max="1" step=".01"
+		     v-model="historyItemZoom">
+	    </label>
+	    <br>
+	    <label>scale
+	      <span id="previewScaleText">{{previewZoom}}%</span>
+	      <input id="previewScale" type="range" min="1" max="100" step="1"
+		     v-model="previewZoom">
+	    </label>
+	    <br>
+	    <label>fontSize
+	      <span id="fontSize">{{history[editing].fontSize}} em</span>
+	      <input type="range" min="1" max="10" step=".1" value="1" v-model="slides[history[editing]].fontSize">
+	    </label>
+	    <br>
+	    <label>padding
+	      <span id="padding">{{history[editing].padding}} px</span>
+	      <input type="range" min="0" max="100" step="1" v-model="slides[history[editing]].padding">
+	    </label>
+	    <br>
+	    <label>
+	      <input name="colors" type="radio" value="blackOnWhite" v-model="slides[history[editing]].colors">
 	  black on white
-	</label>
-	<br>
-	<label>
-	  <input name="style" type="radio" value="whiteOnBlack" v-model="displayStyle">
-	  white on black
-	</label>
-      </div>
-      
-      <div id="previewPane" style="float:right">
-    	<iframe id="preview" v-bind:style="previewStyle" v-bind:srcdoc="previewInnerHTML"></iframe>
-      </div>
+	    </label>
+	    <br>
+	    <label>
+	      <input name="colors" type="radio" value="whiteOnBlack" v-model="slides[history[editing]].colors">
+	      white on black
+	    </label>
+	  </td><td id="renderArea">
+	    <div v-bind:style="renderAreaStyleWrapper(history[editing])">
+	      <div v-bind:style="renderAreaStyle(history[editing])" >
+		<div v-bind:style="slideStyle(history[editing])"
+		     v-html="slides[history[editing]].html"></div>
+	      </div>
+	    </div>
+	  </td><td id="displayArea">
+	    <div v-bind:style="displayAreaStyleWrapper(history[displaying])">
+	      <div v-bind:style="displayAreaStyle(history[displaying])" >
+		<div v-bind:style="slideStyle(history[displaying])"
+		     v-html="slides[history[displaying]].html"></div>
+	      </div>
+	    </div>
+      </td></tr></table>
     </div>
     <script src="jquery-3.3.1.js"></script>
     <script src="present.js"></script>
