@@ -19,12 +19,12 @@
     </style>
     <div id="presenter">
       <div id="historyZoomScale"
-	   style="outline:red solid 1px;height:1em;width:100%; position: relative; margin-bottom: 1em"
+	   style="outline:red solid 0px;height:1em;width:100%; position: relative; margin-bottom: 1em"
 	   v-on:click="dragHistoryZoom"
 	   v-on:mousemove="dragHistoryZoom"
 	   >
 	<div id="historyZoomSlider"
-	     v-bind:style="{ position: 'relative', height: '100%', width: '5%', left: 95 * this.historyItemZoom + '%', background: 'red', textAlign: 'center', cursor: 'pointer'} "
+	     v-bind:style="{ position: 'relative', height: '100%', width: '5%', left: 95 * this.historyItemZoom + '%', background: '#aaa', textAlign: 'center', cursor: 'pointer'} "
 	     >
 	  {{ Math.round(historyItemZoom * 100) + '%' }}
 	</div>
@@ -102,20 +102,15 @@
 	    
 	    <button v-on:click="updateDisplay">Update Display</button>
 	    <br>
-	    <label>historyItemZoom
-	      <span id="historyItemZoom">
-		{{ Math.round(historyItemZoom * 100) }}%</span>
-	      <input id="historyItemZoomInput" type="range"
-		     min=".01" max="1" step=".01"
-		     v-model="historyItemZoom">
-	    </label>
-	    <br>
-	    <label>scale
-	      <span id="previewScaleText">{{previewZoom}}%</span>
-	      <input id="previewScale" type="range" min="1" max="100" step="1"
-		     v-model="previewZoom">
-	    </label>
-	    <br>
+	    <!-- <label>historyItemZoom -->
+	    <!--   <span id="historyItemZoom"> -->
+	    <!-- 	{{ Math.round(historyItemZoom * 100) }}%</span> -->
+	    <!--   <input id="historyItemZoomInput" type="range" -->
+	    <!-- 	     min=".01" max="1" step=".01" -->
+	    <!-- 	     v-model="historyItemZoom"> -->
+	    <!-- </label> -->
+	    <!-- <br> -->
+
 	    <label>fontSize
 	      <span id="fontSize">{{history[editing].fontSize}} em</span>
 	      <input type="range" min="1" max="10" step=".1" value="1" v-model="history[editing].fontSize">

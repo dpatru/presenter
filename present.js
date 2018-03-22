@@ -58,7 +58,6 @@ var app = new Vue({
 	display: {height:100, width: 100,
 		  scrollTop:0, scrollLeft:0, fontSize:1, window:0},
 	displayArea: {height:99, width: 99},
-	previewZoom: 50,
 	displayStyle: 'blackOnWhite',
 	contextMenuData: {},
 	stylesheet: `
@@ -92,7 +91,7 @@ var app = new Vue({
     
     methods: {
 	dragHistoryZoom: function(ev) {
-	    console.log('dragHistoryZoom:', ev);
+	    // console.log('dragHistoryZoom:', ev);
 	    var scaleEl = document.querySelector('#historyZoomScale');
 	    var elClientX = scaleEl.getBoundingClientRect().left;
 	    if (ev.type === 'mousemove' && ev.buttons === 0) {
@@ -567,39 +566,6 @@ var app = new Vue({
 	    return frameRef.contentWindow ?
 		frameRef.contentWindow.document : frameRef.contentDocument;
 	},
-	previewStyle: function() {
-	    var frameRef = document.getElementById('preview');
-	    var d = frameRef.contentWindow ?
-	    	frameRef.contentWindow.document : frameRef.contentDocument;
-	    
-	    // d.body.style.zoom = this.previewZoom/100.0;
-
-	    // var fontSize = this.display.fontSize + 'em';
-	    // d.body.style.fontSize = fontSize;
-	    var w = this.getDisplay();
-
-	    frameRef.style.height =
-		Math.round(this.display.height * this.previewZoom/100.0);
-	    frameRef.style.width =
-		Math.round(this.display.width * this.previewZoom/100.0);
-
-	    if (w) {
-		// w.document.body.style.fontSize = fontSize;
-		while (d.body.innerHeight < w.document.body.clientHeight * this.previewZoom/100.0){
-		    $('#preview').height($('#preview').height()+1);
-		    console.log('adjusting height', $('#preview').height());
-		}
-		while (d.body.innerWidth < w.document.body.clientWidth * this.previewZoom/100.0){
-		    $('#preview').width($('#preview').width()+1);
-		    console.log('adjusting width', $('#preview').width());
-		}
-	    }
-	    // console.log('width', $('#preview').width());
-	    return {
-		height: $('#preview').height(),
-		width: $('#preview').width()
-	    }
-	},
 	
 	displayStyleSheet: function() {
 	    return '<style>'+displayStyleSheet[this.displayStyle]+
@@ -613,11 +579,6 @@ var app = new Vue({
 	
 	displayInnerHTML: function() {
 	    return this.displayStyleSheet + this.innerHTML;
-	},
-	previewStyleSheet: function() {
-	    return '<style>'+displayStyleSheet[this.displayStyle]+
-		'body {zoom:'+this.previewZoom/100.0+'; font-size:'+this.display.fontSize+'em}'+
-		'</style>';
 	},
 	previewInnerHTML: function() {
 	    return this.previewStyleSheet + this.innerHTML;
