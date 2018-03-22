@@ -60,36 +60,32 @@ var app = new Vue({
 	displayArea: {height:99, width: 99},
 	displayStyle: 'blackOnWhite',
 	contextMenuData: {},
-	stylesheet: `
-.blackOnWhite {padding:1em; margin:0; white-space:pre-wrap} 
-.blackOnWhite em.hilite {font-style:normal; background:yellow} 
-.blackOnWhite em.bold {font-style:normal; color:red}
-.whiteOnBlack {color:white; background-color:black; padding:1em; margin:0; white-space:pre-wrap} 
-.whiteOnBlack em.hilite {font-style: normal; color:yellow} 
-.whiteOnBlack em.bold {font-style:normal;color:lightcoral}
-`,
 	clicked: 0,
 	// dblclicked: false,
 	clickDelay: 90
     },
     
-    beforeCreate: function() {
-	console.log('beforeCreate');
-	//var w = this.getDisplay();
-    },
+    // beforeCreate: function() {
+    // 	console.log('beforeCreate');
+    // 	//var w = this.getDisplay();
+    // },
     
     created: function() {
 	console.log('created');
 	var w = this.getDisplay();
     },
     
-    mounted: function() {
-	console.log('mounted');
-	// Called when application is mounted.
-	var w = this.getDisplay();
-    },
+    // mounted: function() {
+    // 	console.log('mounted');
+    // 	// Called when application is mounted.
+    // 	var w = this.getDisplay();
+    // },
     
     methods: {
+	html: function(n) {
+	    return emphasize(this.history[n].html);
+	},
+	
 	dragHistoryZoom: function(ev) {
 	    // console.log('dragHistoryZoom:', ev);
 	    var scaleEl = document.querySelector('#historyZoomScale');
@@ -198,19 +194,19 @@ var app = new Vue({
 
 	    // see https://stackoverflow.com/a/41309853/268040
 
-	    console.log('clickHistory:',
-			'editing =', this.editing,
-			', displaying =', this.displaying);
+	    // console.log('clickHistory:',
+	    // 		'editing =', this.editing,
+	    // 		', displaying =', this.displaying);
 	    this.clicked += 1;
-	    console.log("clickHistory: clicked =", this.clicked);
+	    // console.log("clickHistory: clicked =", this.clicked);
 	    if (this.clicked == 1) {
 		// possible click, set callback to find out.
 		var self = this;
 		setTimeout(function() {
-		    console.log('clickHistory timeout:',
-				'clicked =', self.clicked,
-				', index =', index);
-		    if (self.clicked == 1) {
+		    // console.log('clickHistory timeout:',
+		    // 		'clicked =', self.clicked,
+		    // 		', index =', index);
+	 	    if (self.clicked == 1) {
 			self.editing = index;
 		    }
 		    // reset clicked
@@ -220,10 +216,10 @@ var app = new Vue({
 	},
 
 	dblclickHistory: function(index) {
-	    console.log('dblclickHistory:',
-			'editing =', this.editing,
-			', displaying =', this.displaying,
-			', reset clicked, set dblclicked, set displaying');
+	    // console.log('dblclickHistory:',
+	    // 		'editing =', this.editing,
+	    // 		', displaying =', this.displaying,
+	    // 		', reset clicked, set dblclicked, set displaying');
 	    this.displaying = index;
 	    return false;
 	},
@@ -425,20 +421,16 @@ var app = new Vue({
 		fontSize: slide.fontSize+'em'
 	    });
 	},
+
 	updateDisplayArea: function() {
 	    this.displayArea.width = $("#displayArea").width();
 	    this.displayArea.height = $("#displayArea").height();
 	},
-	updateDisplay: function() {
-	    var w = this.displayWindow;
-	    if (w) {
-		w.document.body.innerHTML = this.displayInnerHTML;
-		this.updateDisplayDimensions();
-	    }
-	},
+	
 	getDisplay: function() {
 	    console.log("getDisplay");
 	    if (!this.display.window || this.display.window.closed) {
+		this.display.window = 0;
 		var name = 'display', i=0;
 		while (window.name == name+i) i++;
 		this.display.window =
@@ -512,31 +504,41 @@ var app = new Vue({
 		return;
 	    }
 	    w.document.body.innerHTML =
-		'<style>'+this.stylesheet+'</style>'+
-		s.html;
+		"<style> @import 'styles.css' </style>" + s.html;
 
 	    for (var p in s.style) {
 		w.document.body.style[p] = s.style[p];
 	    }
 
-	    w.document.body.className = this.className[this.displaying];
+	    w.document.body.className = this.className(this.displaying);
 	}
 	
     },
     watch: {
 	displayingSlide: function() {
-	    console.log('displayingSlide has changed, setting display');
+	    // console.log('displayingSlide has changed, setting display');
 	    this.setDisplay();
 	},
 
 	displayWindow: function() {
 	    console.log('watching displayWindow');
 	    if (!this.displayWindow || this.displayWindow.closed) {
-		console.log('watching displayWindow: reopening display');
+		console.log('watching displayWindow: can not open display');
+		throw 'watching displayWindow: can not open display';
 		this.getDisplay();
 		this.setDisplay();
 	    }
-	}
+	},
+
+	// displayWindowIsClosed: function() {
+	//     console.log('watching displayWindowIsClosed');
+	//     if (!this.displayWindow || this.displayWindow.closed) {
+	// 	console.log('watching displayWindowIsClosed: reopening display');
+	// 	this.getDisplay();
+	// 	this.setDisplay();
+	//     }
+	// },
+
     },
     
     computed: {
@@ -544,20 +546,27 @@ var app = new Vue({
 	    return this.display.window || this.getDisplay();
 	},
 
+	// displayWindowIsClosed: function() {
+	//     return false;
+	//     return !this.display.window || this.display.window.closed;
+	// },
+
 	editingSlide: function() {
 	    var s = this.history[this.editing];
 	    return {
-		id: s.id, html: s.html, colors: s.colors,
+		id: s.id, html: emphasize(s.html), colors: s.colors,
 		fontSize: s.fontSize, padding: s.padding,
-		style: this.slideStyle(this.editing)
+		style: this.slideStyle(this.editing),
+		className: this.className(this.editing)
 	    };
 	},
 
 	displayingSlide: function() {
 	    var s = this.history[this.displaying];
-	    return {id: s.id, html: s.html, colors: s.colors,
+	    return {id: s.id, html: emphasize(s.html), colors: s.colors,
 		    fontSize: s.fontSize, padding: s.padding,
-		    style: this.slideStyle(this.displaying)
+		    style: this.slideStyle(this.displaying),
+		    className: this.className(this.displaying)
 		   };
 	},
 	
@@ -573,16 +582,6 @@ var app = new Vue({
 		'</style>';
 	},
 	
-	innerHTML: function() {
-	    // return emphasize(escapeHtml(this.raw));
-	},
-	
-	displayInnerHTML: function() {
-	    return this.displayStyleSheet + this.innerHTML;
-	},
-	previewInnerHTML: function() {
-	    return this.previewStyleSheet + this.innerHTML;
-	}
     }
 });
 

@@ -17,6 +17,7 @@
       table { outline: solid #aaa 1px; box-sizing: border-box; width: 100%; table-layout: fixed; border-colapse: collapse }
       table td { outline: solid #aaa 1px }
     </style>
+    <style> @import 'styles.css' </style>
     <div id="presenter">
       <div id="historyZoomScale"
 	   style="outline:red solid 0px;height:1em;width:100%; position: relative; margin-bottom: 1em"
@@ -70,13 +71,12 @@
 	     v-bind:style="historyItemWrapperStyle(index)"
 	     v-on:click="clickHistory(index)"
 	     v-on:dblclick="dblclickHistory(index)"
-	     @contextmenu.prevent="$refs.ctx.open($event, {item: item, index: index})">
-	  <div v-bind:style="historyItemStyle(index)" >
+	     @contextmenu.prevent="$refs.ctx.open($event, {item: item, index: index})"><div v-bind:style="historyItemStyle(index)" >
 	    <div v-bind:style="slideStyle(index)"
-		 v-html="item.html"></div>
+		 v-bind:class="className(index)"
+		 v-html="html(index)"></div>
 	  </div>
-	</div>
-	<div slot="footer" @click="insertNewSlide(history.length)"
+	</div><div slot="footer" @click="insertNewSlide(history.length)"
 	     v-bind:style="historyItemWrapperStyle()">
 	  <div v-bind:style="historyFooterStyle()"> Add </div>
 	</div>
@@ -100,17 +100,6 @@
 		      placeholder="Put text here.">
 	    </textArea>
 	    
-	    <button v-on:click="updateDisplay">Update Display</button>
-	    <br>
-	    <!-- <label>historyItemZoom -->
-	    <!--   <span id="historyItemZoom"> -->
-	    <!-- 	{{ Math.round(historyItemZoom * 100) }}%</span> -->
-	    <!--   <input id="historyItemZoomInput" type="range" -->
-	    <!-- 	     min=".01" max="1" step=".01" -->
-	    <!-- 	     v-model="historyItemZoom"> -->
-	    <!-- </label> -->
-	    <!-- <br> -->
-
 	    <label>fontSize
 	      <span id="fontSize">{{history[editing].fontSize}} em</span>
 	      <input type="range" min="1" max="10" step=".1" value="1" v-model="history[editing].fontSize">
@@ -134,14 +123,16 @@
 	    <div v-bind:style="renderAreaWrapperStyle(editing)">
 	      <div v-bind:style="renderAreaStyle(editing)" >
 		<div v-bind:style="slideStyle(editing)"
-		     v-html="history[editing].html"></div>
+		     v-bind:class="editingSlide.className"
+		     v-html="editingSlide.html"></div>
 	      </div>
 	    </div>
 	  </td><td id="displayArea">
 	    <div v-bind:style="displayAreaWrapperStyle(displaying)">
 	      <div v-bind:style="displayAreaStyle(displaying)" >
 		<div v-bind:style="slideStyle(displaying)"
-		     v-html="history[displaying].html"></div>
+		     v-bind:class="displayingSlide.className"
+		     v-html="displayingSlide.html"></div>
 	      </div>
 	    </div>
       </td></tr></table>
