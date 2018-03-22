@@ -14,10 +14,26 @@
   </head>
   <body>
     <style>
-      table { outline: solid red 1px; box-sizing: border-box; width: 100%; table-layout: fixed; border-colapse: collapse }
-      table td { outline: solid red 1px }
+      table { outline: solid #aaa 1px; box-sizing: border-box; width: 100%; table-layout: fixed; border-colapse: collapse }
+      table td { outline: solid #aaa 1px }
     </style>
     <div id="presenter">
+      <div id="historyZoomScale"
+	   class="dragHistoryZoomTarget"
+	   style="outline:red solid 1px;height:1em;width:100%; position: relative; margin-bottom: 1em"
+	   v-on:dragover="dragoverHistoryZoom"
+	   v-on:drop="dropHistoryZoom"
+	   >
+	<div id="historyZoomSlider"
+	     class="dragHistoryZoomTarget"
+	     v-bind:style="{ position: 'relative', height: '100%', width: '5%', left: 95 * this.historyItemZoom + '%', background: 'red', textAlign: 'center', cursor: 'pointer'} "
+	     draggable="true"
+	     v-on:dragstart="dragstartHistoryZoom"
+	     >
+	  {{ Math.round(historyItemZoom * 100) + '%' }}
+	</div>
+      </div>
+	
       <context-menu ref="ctx"
 	@ctx-open="onCtxOpen"
 	@ctx-cancel="resetCtxLocals"
@@ -51,9 +67,11 @@
       </context-menu>
       
       <draggable v-model="history" :move="reorderHistory"
+		 :options="{draggable:'.draggable'}"
 		 element="div" id="navigation">
 	<div v-for="(item, index) in history" :key="item.id"
-	     v-bind:style="historyItemStyleWrapper(index)"
+	     class="draggable"
+	     v-bind:style="historyItemWrapperStyle(index)"
 	     v-on:click="clickHistory(index)"
 	     v-on:dblclick="dblclickHistory(index)"
 	     @contextmenu.prevent="$refs.ctx.open($event, {item: item, index: index})">
@@ -61,6 +79,10 @@
 	    <div v-bind:style="slideStyle(index)"
 		 v-html="item.html"></div>
 	  </div>
+	</div>
+	<div slot="footer" @click="insertNewSlide(history.length)"
+	     v-bind:style="historyItemWrapperStyle()">
+	  <div v-bind:style="historyFooterStyle()"> Add </div>
 	</div>
     </draggable>
       <table>
@@ -118,14 +140,14 @@
 	      white on black
 	    </label>
 	  </td><td id="renderArea">
-	    <div v-bind:style="renderAreaStyleWrapper(editing)">
+	    <div v-bind:style="renderAreaWrapperStyle(editing)">
 	      <div v-bind:style="renderAreaStyle(editing)" >
 		<div v-bind:style="slideStyle(editing)"
 		     v-html="history[editing].html"></div>
 	      </div>
 	    </div>
 	  </td><td id="displayArea">
-	    <div v-bind:style="displayAreaStyleWrapper(displaying)">
+	    <div v-bind:style="displayAreaWrapperStyle(displaying)">
 	      <div v-bind:style="displayAreaStyle(displaying)" >
 		<div v-bind:style="slideStyle(displaying)"
 		     v-html="history[displaying].html"></div>

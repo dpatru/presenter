@@ -9,7 +9,7 @@ function merge(){
 }
 
 Vue.component('navigation', {
-    template: '<div style="outline: red solid 1px"> Navigation Template </div>'
+    template: '<div style="outline: gray solid 1px"> Navigation Template </div>'
     // data: function() { return {}; }
 });
 
@@ -34,6 +34,7 @@ function emphasize(txt) {
 		     return m1+'<em class="hilite">'+m2+'</em>'+m3;});
 }
 
+
 var displayStyleSheet = {
     blackOnWhite: "body {padding:1em; margin:0; white-space:pre-wrap} em.hilite {font-style:normal; background:yellow} em.bold {font-style:normal; color:red}",
     whiteOnBlack: "body {color:white; background-color:black; padding:1em; margin:0; white-space:pre-wrap} em.hilite {font-style: normal; color:yellow} em.bold {font-style:normal;color:lightcoral}"
@@ -49,20 +50,85 @@ var app = new Vue({
 	     fontSize: 1, padding: 10},
 	    {id: 1, html: 'two', colors: 'whiteOnBlack',
 	     fontSize: 1, padding: 10}],
+	historyZoomDragStartPosition: 0,
+	historyZoomDragStartValue: 0,
 	nextSlide: 2,
 	displaying: 0,
 	editing: 0,
 	renderArea: {height:0, width: 0},
 	displayArea: {height:0, width: 0},
-	display: {height:100, width: 100, scrollTop:0, scrollLeft:0, window:0, fontSize:1},
-	raw: '',
+	display: {height:100, width: 100,
+		  scrollTop:0, scrollLeft:0, fontSize:1, window:0},
+	displayArea: {height:99, width: 99},
 	previewZoom: 50,
 	displayStyle: 'blackOnWhite',
 	contextMenuData: {},
-	clicked: false,
-	clickDelay: 10
+	stylesheet: `
+.blackOnWhite {padding:1em; margin:0; white-space:pre-wrap} 
+.blackOnWhite em.hilite {font-style:normal; background:yellow} 
+.blackOnWhite em.bold {font-style:normal; color:red}
+.whiteOnBlack {color:white; background-color:black; padding:1em; margin:0; white-space:pre-wrap} 
+.whiteOnBlack em.hilite {font-style: normal; color:yellow} 
+.whiteOnBlack em.bold {font-style:normal;color:lightcoral}
+`,
+	clicked: 0,
+	// dblclicked: false,
+	clickDelay: 90
     },
+    
+    beforeCreate: function() {
+	console.log('beforeCreate');
+	//var w = this.getDisplay();
+    },
+    
+    created: function() {
+	console.log('created');
+	var w = this.getDisplay();
+    },
+    
+    mounted: function() {
+	console.log('mounted');
+	// Called when application is mounted.
+	var w = this.getDisplay();
+    },
+    
     methods: {
+	dragstartHistoryZoom: function(ev) {
+	    console.log('dragstartHistoryZoom:', ev);
+	    this.historyZoomDragStartPosition = ev.clientX;
+	    this.historyZoomDragStartValue = this.historyItemZoom;
+	    ev.dataTransfer.setData('text/plain',null);
+	    return false;
+	},
+
+	dragoverHistoryZoom: function(ev) {
+	    console.log('dragoverHistoryZoom:', ev);
+	    if (ev.target.classList.contains('dragHistoryZoomTarget')) {
+		var scaleEl = document.querySelector('#historyZoomScale');
+		console.log(
+		    'dragoverHistoryZoom:',
+		    'startValue', this.historyZoomDragStartValue,
+		    'clientX', ev.clientX,
+		    'startPosition', this.historyZoomDragStartPosition,
+		    'clientWidth', scaleEl.clientWidth);
+			    
+		this.historyItemZoom = 
+		    this.historyZoomDragStartValue +
+		    (ev.clientX - this.historyZoomDragStartPosition) /
+		    scaleEl.clientWidth;
+	    }
+	    else {
+		console.log('dragoverHistoryZoom: bad classname:',
+			    ev.target.className, ev.target);
+	    }
+	    return false;
+	},
+
+	dropHistoryZoom:function(ev) {
+	    console.log('dropHistoryZoom:', ev);
+	    this.dragHistoryZoom(ev);
+	},
+
 	onCtxOpen: function (locals) {
             console.log('open', locals)
             this.contextMenuData = locals
@@ -134,25 +200,52 @@ var app = new Vue({
 	},
 
 	clickHistory: function(index) {
-	    console.log('clickHistory');
-	    if (this.clicked) return;
-	    this.clicked = true;
-	    var self = this;
-	    setTimeout(function() {
-		console.log('clickHistory timeout', index);
-		if (self.clicked) {
-		    self.editing = index;
-		    self.clicked = false;
-		}
-	    }, self.clickDelay);
+	    // clickHistory and dblclickHistory allow double clicking
+	    // in the history area without two additional click
+	    // events. We do this by waiting to handle a click event
+	    // until after a double click would have arrived. If a
+	    // click event is followed closely (within clickDelay
+	    // milliseconds) by a double click event, then the click
+	    // event is ignored.
+
+	    // Specifically, when a click event is received, the
+	    // clicked variable is incremented. If it is equal to one,
+	    // then we may have a single click. We set a timeout to
+	    // find out. If by the time the timeout fires, the clicked
+	    // variable is still equal to one, we handle a single
+	    // click event. In any case, we reset the clicked variable
+	    // in the timeout.
+
+	    // see https://stackoverflow.com/a/41309853/268040
+
+	    console.log('clickHistory:',
+			'editing =', this.editing,
+			', displaying =', this.displaying);
+	    this.clicked += 1;
+	    console.log("clickHistory: clicked =", this.clicked);
+	    if (this.clicked == 1) {
+		// possible click, set callback to find out.
+		var self = this;
+		setTimeout(function() {
+		    console.log('clickHistory timeout:',
+				'clicked =', self.clicked,
+				', index =', index);
+		    if (self.clicked == 1) {
+			self.editing = index;
+		    }
+		    // reset clicked
+		    self.clicked = 0;
+		}, self.clickDelay);
+	    }
 	},
 
 	dblclickHistory: function(index) {
-	    console.log('dblclickHistory');
-	    if (this.clicked) {
-		this.clicked = false;
-		this.displaying = index;
-	    }
+	    console.log('dblclickHistory:',
+			'editing =', this.editing,
+			', displaying =', this.displaying,
+			', reset clicked, set dblclicked, set displaying');
+	    this.displaying = index;
+	    return false;
 	},
 	    
 	reorderHistory: function(onMoveEvent) {
@@ -177,6 +270,7 @@ var app = new Vue({
 	},
 
 	colors: function(n){
+	    if (undefined === n) return {};
 	    var colors = this.history[n].colors;
 	    return {
 		background: colors=='blackOnWhite'? 'white':
@@ -185,36 +279,40 @@ var app = new Vue({
 		    colors=='whiteOnBlack'? 'white': 'yellow'
 	    };
 	},
-	historyItemStyleWrapper: function(n){
+
+	historyItemWrapperStyle: function(n){
 	    // set the size, but not the zoom level
-	    var w = this.getDisplay();
-	    if (!w) {
-		console.log("historyItemStyle: ERROR: couldn't get display");
-		return {};
-	    }
 	    return merge(this.colors(n), {
 		display: "inline-block",
-		outline: "red solid 1px",
-		borderBottom: (this.displaying==n? 'green': 'white') + ' solid .3em',
-		borderTop: (this.editing==n? 'red': 'white') + ' solid .3em',
+		outline: "gray solid 1px",
+		borderBottom: (this.displaying==n? '#afa': '#aaa') + ' solid .3em',
+		borderTop: (this.editing==n? '#faa': '#aaa') + ' solid .3em',
 		// outline: "green solid 1px",
 		overflow: "hidden",
 		fontSize: "1em",
-		'text-size-adjust': "auto",
-		'font-size-adjust': "auto",
-		'textSizeAdjust': "auto",
-		'fontSizeAdjust': "auto",
-		'-webkit-text-size-adjust': "auto",
-		width: w.document.body.clientWidth * this.historyItemZoom +'px',
-		height: w.document.body.clientHeight * this.historyItemZoom +'px',
+		textSizeAdjust: "auto",
+		fontSizeAdjust: "auto",
+		width: this.display.width * this.historyItemZoom +'px',
+		height: this.display.height * this.historyItemZoom +'px',
+		cursor: 'pointer',
 		marginRight: this.historyItemZoom * 4 +'em'
 	    });
 	},
+	historyFooterStyle: function() {
+	    return {
+		display: 'flex',
+		alignItems: 'center',
+		justifyContent: 'center',
+		height: '100%',
+		fontSize: Math.min(this.display.width, this.display.height) * 0.40 * this.historyItemZoom + 'px'
+	    };
+	},
+	
 	historyItemStyle: function(n){
 	    // set the zoom level
-	    var w = this.getDisplay();
+	    var w = this.displayWindow;
 	    if (!w) {
-		console.log("historyItemStyle: ERROR: couldn't get display");
+		console.log("historyItemStyle: Error: couldn't get display");
 		return {};
 	    }
 	    return merge(this.colors(n), {
@@ -224,33 +322,30 @@ var app = new Vue({
 		transform: "scale("+this.historyItemZoom+")",
 		transformOrigin: "top left",
 		// fontSize: "1em",
-		// 'text-size-adjust': "auto",
-		// 'font-size-adjust': "auto",
-		// 'textSizeAdjust': "auto",
-		// 'fontSizeAdjust': "auto",
-		// '-webkit-text-size-adjust': "auto",
+		// textSizeAdjust: "auto",
+		// fontSizeAdjust: "auto",
 		width: w.document.body.clientWidth +'px',
 		height: w.document.body.clientHeight +'px'
 	    });
 	},
 	renderAreaScale: function() {
-	    var w = this.getDisplay();
+	    var w = this.displayWindow;
 	    if (!w) {
-		console.log("renderAreaScale: ERROR: couldn't get display");
+		console.log("renderAreaScale: Error: couldn't get display");
 		return -1;
 	    }
 	    return this.renderArea.width / w.document.body.clientWidth;
 	},
-	renderAreaStyleWrapper: function(n){
+	renderAreaWrapperStyle: function(n){
 	    // set the size, but not the zoom level
-	    var w = this.getDisplay();
+	    var w = this.displayWindow;
 	    if (!w) {
-		console.log("renderAreaStyleWrapper: ERROR: couldn't get display");
+		console.log("renderAreaWrapperStyle: Error: couldn't get display");
 		return {};
 	    }
 	    var s = this.renderAreaScale();
 	    if (s < 0) {
-		console.log("renderAreaStyleWrapper: ERROR: couldn't get scale");
+		console.log("renderAreaWrapperStyle: Error: couldn't get scale");
 		return {};
 	    }
 	    return merge(this.colors(n), {
@@ -258,57 +353,51 @@ var app = new Vue({
 		outline: "green solid 1px",
 		overflow: "hidden",
 		fontSize: "1em",
-		'text-size-adjust': "auto",
-		'font-size-adjust': "auto",
-		'textSizeAdjust': "auto",
-		'fontSizeAdjust': "auto",
-		'-webkit-text-size-adjust': "auto",
+		textSizeAdjust: "auto",
+		fontSizeAdjust: "auto",
 		width: this.renderArea.width +'px',
 		height: w.document.body.clientHeight * s +'px'
 	    });
 	},
 	renderAreaStyle: function(n){
 	    // set the zoom level
-	    var w = this.getDisplay();
+	    var w = this.displayWindow;
 	    if (!w) {
-		console.log("renderAreaStyle: ERROR: couldn't get display");
+		console.log("renderAreaStyle: Error: couldn't get display");
 		return {};
 	    }
 	    return merge(this.colors(n), {
 		display: "inline-block",
-		outline: "red solid 1px",
+		outline: "gray solid 1px",
 		overflow: "hidden",
 		// zoom: this.historyItemZoom,
-		transform: "scale("+this.renderAreaScale+")",
+		transform: "scale("+this.renderAreaScale()+")",
 		transformOrigin: "top left",
 		fontSize: "1em",
-		'text-size-adjust': "auto",
-		'font-size-adjust': "auto",
-		'textSizeAdjust': "auto",
-		'fontSizeAdjust': "auto",
-		'-webkit-text-size-adjust': "auto",
+		textSizeAdjust: "auto",
+		fontSizeAdjust: "auto",
 		width: w.document.body.clientWidth +'px',
 		height: w.document.body.clientHeight +'px'
 	    });
 	},
 	displayAreaScale: function() {
-	    var w = this.getDisplay();
+	    var w = this.displayWindow;
 	    if (!w) {
-		console.log("displayAreaScale: ERROR: couldn't get display");
+		console.log("displayAreaScale: Error: couldn't get display");
 		return -1;
 	    }
 	    return this.displayArea.width / w.document.body.clientWidth;
 	},
-	displayAreaStyleWrapper: function(n){
+	displayAreaWrapperStyle: function(n){
 	    // set the size, but not the zoom level
-	    var w = this.getDisplay();
+	    var w = this.displayWindow;
 	    if (!w) {
-		console.log("displayAreaStyleWrapper: ERROR: couldn't get display");
+		console.log("displayAreaWrapperStyle: Error: couldn't get display");
 		return {};
 	    }
 	    var s = this.displayAreaScale();
 	    if (s < 0) {
-		console.log("displayAreaStyleWrapper: ERROR: couldn't get scale");
+		console.log("displayAreaWrapperStyle: Error: couldn't get scale");
 		return {};
 	    }
 	    return merge(this.colors(n), {
@@ -316,39 +405,37 @@ var app = new Vue({
 		outline: "green solid 1px",
 		overflow: "hidden",
 		fontSize: "1em",
-		'text-size-adjust': "auto",
-		'font-size-adjust': "auto",
-		'textSizeAdjust': "auto",
-		'fontSizeAdjust': "auto",
-		'-webkit-text-size-adjust': "auto",
+		textSizeAdjust: "auto",
+		fontSizeAdjust: "auto",
 		width: this.displayArea.width +'px',
 		height: w.document.body.clientHeight * s +'px'
 	    });
 	},
 	displayAreaStyle: function(n){
 	    // set the zoom level
-	    var w = this.getDisplay();
+	    var w = this.displayWindow;
 	    if (!w) {
-		console.log("displayAreaStyle: ERROR: couldn't get display");
+		console.log("displayAreaStyle: Error: couldn't get display");
 		return {};
 	    }
 	    return merge(this.colors(n), {
 		display: "inline-block",
-		outline: "red solid 1px",
+		outline: "gray solid 1px",
 		overflow: "hidden",
 		// zoom: this.historyItemZoom,
-		transform: "scale("+this.displayAreaScale+")",
+		transform: "scale("+this.displayAreaScale()+")",
 		transformOrigin: "top left",
 		fontSize: "1em",
-		'text-size-adjust': "auto",
-		'font-size-adjust': "auto",
-		'textSizeAdjust': "auto",
-		'fontSizeAdjust': "auto",
-		'-webkit-text-size-adjust': "auto",
+		textSizeAdjust: "auto",
+		fontSizeAdjust: "auto",
 		width: w.document.body.clientWidth +'px',
 		height: w.document.body.clientHeight +'px'
 	    });
 	},
+	className: function(n) {
+	    return this.history[n].colors;
+	},
+	
 	slideStyle: function(n) {
 	    var slide = this.history[n];
 	    return merge(this.colors(n), {
@@ -359,53 +446,141 @@ var app = new Vue({
 	    });
 	},
 	updateDisplayArea: function() {
-	    this.display.width = $("#displayArea").width();
-	    this.display.height = $("#displayArea").height();
+	    this.displayArea.width = $("#displayArea").width();
+	    this.displayArea.height = $("#displayArea").height();
 	},
 	updateDisplay: function() {
-	    var w = this.getDisplay();
+	    var w = this.displayWindow;
 	    if (w) {
 		w.document.body.innerHTML = this.displayInnerHTML;
-		this.updateDisplaySize();
+		this.updateDisplayDimensions();
 	    }
 	},
 	getDisplay: function() {
+	    console.log("getDisplay");
 	    if (!this.display.window || this.display.window.closed) {
-		this.display.window = window.open('display.html', 'display');
+		var name = 'display', i=0;
+		while (window.name == name+i) i++;
+		this.display.window =
+		    window.open('display.html', name+i);
 	    }
-	    if (!this.display.window) {
-		    console.log('null display.window');
+	    var w = this.display.window;
+	    if (!w) {
+		console.error('getDisplay: null display.window, bailing out');
+		throw 'getDisplay: null display.window, bailing out';
+		return;
 	    }
-	    else {
-		var me = this;
-		var w = this.display.window;
-		w.onresize=function(){me.updateDisplaySize();};
-		w.document.onscroll=function(){
+	    this.updateDisplayDimensions();
+	    this.updateDisplayScroll();
+	    this.setDisplayWindowListeners();
+	    return this.display.window;
+	},
+
+	setDisplayWindowListeners: function() {
+	    var me = this;
+	    var w = this.displayWindow;
+	    try {
+		if (!w) {
+		    console.error('getDisplay: Error trying to set callbacks on null displayWindow, bailing out');
+		    return;
+		}
+		w.onresize = function() {
+		    console.log('onresize callback');
+		    return me.updateDisplayDimensions();
+		};
+		w.document.onscroll = function() {
+		    console.log('onscroll callback');
 		    me.updateDisplayScroll();
 		};
-		return this.display.window;
+		w.onclose = function() {
+		    console.log('onclose callback');
+		    me.displayWindow = 0;
+		};
+	    }
+	    catch(error) {
+		console.error('getDisplay: Error setting callbacks on display window:', error);
 	    }
 	},
-	updateDisplaySize: function() {
-	    var w = this.display.window;
-	    if (w) {
-		this.display.height = w.document.body.clientHeight;
-		this.display.width = w.document.body.clientWidth;
+
+	updateDisplayDimensions: function() {
+	    console.log('updateDisplayDimensions');
+	    var w = this.displayWindow;
+	    if (!w) {
+		console.log('updateDisplayDimensions: Error: window is null');
 	    }
+	    this.display.width = w.document.body.clientWidth;
+	    this.display.height = w.document.body.clientHeight;
+	    return false; // stopPropogation
 	},
+	
 	updateDisplayScroll: function() {
-	    console.log('scrolling');
-	    var w = this.display.window;
-	    
-	    if (w) {
-		this.display.scrollTop = w.document.body.scrollTop;
-		this.display.scrollLeft = w.document.body.scrollLeft;
-		console.log('scrollTop', w.document.body.scrollTop);
+	    console.log('updateDisplayScroll');
+	    var w = this.displayWindow;
+	    if (!w) {
+		console.log('updateDisplayScroll: Error: window is null');
+	    }
+	    this.display.scrollTop = w.document.body.scrollTop;
+	    this.display.scrollLeft = w.document.body.scrollLeft;
+	    return false;
+	},
+
+	setDisplay: function() {
+	    var s = this.displayingSlide;
+	    var w = this.displayWindow;
+	    if (!w) {
+		console.log('displayingSlide: Error: no display');
+		return;
+	    }
+	    w.document.body.innerHTML =
+		'<style>'+this.stylesheet+'</style>'+
+		s.html;
+
+	    for (var p in s.style) {
+		w.document.body.style[p] = s.style[p];
+	    }
+
+	    w.document.body.className = this.className[this.displaying];
+	}
+	
+    },
+    watch: {
+	displayingSlide: function() {
+	    console.log('displayingSlide has changed, setting display');
+	    this.setDisplay();
+	},
+
+	displayWindow: function() {
+	    console.log('watching displayWindow');
+	    if (!this.displayWindow || this.displayWindow.closed) {
+		console.log('watching displayWindow: reopening display');
+		this.getDisplay();
+		this.setDisplay();
 	    }
 	}
-	    
     },
+    
     computed: {
+	displayWindow: function() {
+	    return this.display.window || this.getDisplay();
+	},
+
+	editingSlide: function() {
+	    var s = this.history[this.editing];
+	    return {
+		id: s.id, html: s.html, colors: s.colors,
+		fontSize: s.fontSize, padding: s.padding,
+		style: this.slideStyle(this.editing)
+	    };
+	},
+
+	displayingSlide: function() {
+	    var s = this.history[this.displaying];
+	    return {id: s.id, html: s.html, colors: s.colors,
+		    fontSize: s.fontSize, padding: s.padding,
+		    style: this.slideStyle(this.displaying)
+		   };
+	},
+	
 	previewDocument: function(){
 	    var frameRef = document.getElementById('preview');
 	    return frameRef.contentWindow ?
@@ -444,14 +619,17 @@ var app = new Vue({
 		width: $('#preview').width()
 	    }
 	},
+	
 	displayStyleSheet: function() {
 	    return '<style>'+displayStyleSheet[this.displayStyle]+
 		'body{font-size:'+this.display.fontSize+'em}'+
 		'</style>';
 	},
+	
 	innerHTML: function() {
-	    return emphasize(escapeHtml(this.raw));
+	    // return emphasize(escapeHtml(this.raw));
 	},
+	
 	displayInnerHTML: function() {
 	    return this.displayStyleSheet + this.innerHTML;
 	},
@@ -466,14 +644,15 @@ var app = new Vue({
     }
 });
 
-// from  https://wicg.github.io/ResizeObserver/#algorithms
+		  
 var areaRO = new ResizeObserver( function(entries) {
+    // from  https://wicg.github.io/ResizeObserver/#algorithms
     for (let entry of entries) {
 	// let cs = window.getComputedStyle(entry.target);
 	let cs = entry.target.getBoundingClientRect();
-	console.log('watching element:', entry.target);
-	console.log(entry.contentRect.width,' is ', cs.width);
-	console.log(entry.contentRect.height,' is ', cs.height);
+	// console.log('watching element:', entry.target);
+	// console.log(entry.contentRect.width,' is ', cs.width);
+	// console.log(entry.contentRect.height,' is ', cs.height);
 	//console.log(entry.contentRect.top,' is ', cs.paddingTop);
 	//console.log(entry.contentRect.left,' is ', cs.paddingLeft);
 	var id = entry.target.id;
