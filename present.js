@@ -50,8 +50,6 @@ var app = new Vue({
 	     fontSize: 1, padding: 10},
 	    {id: 1, html: 'two', colors: 'whiteOnBlack',
 	     fontSize: 1, padding: 10}],
-	historyZoomDragStartPosition: 0,
-	historyZoomDragStartValue: 0,
 	nextSlide: 2,
 	displaying: 0,
 	editing: 0,
@@ -93,40 +91,23 @@ var app = new Vue({
     },
     
     methods: {
-	dragstartHistoryZoom: function(ev) {
-	    console.log('dragstartHistoryZoom:', ev);
-	    this.historyZoomDragStartPosition = ev.clientX;
-	    this.historyZoomDragStartValue = this.historyItemZoom;
-	    ev.dataTransfer.setData('text/plain',null);
-	    return false;
-	},
-
-	dragoverHistoryZoom: function(ev) {
-	    console.log('dragoverHistoryZoom:', ev);
-	    if (ev.target.classList.contains('dragHistoryZoomTarget')) {
-		var scaleEl = document.querySelector('#historyZoomScale');
-		console.log(
-		    'dragoverHistoryZoom:',
-		    'startValue', this.historyZoomDragStartValue,
-		    'clientX', ev.clientX,
-		    'startPosition', this.historyZoomDragStartPosition,
-		    'clientWidth', scaleEl.clientWidth);
+	dragHistoryZoom: function(ev) {
+	    console.log('dragHistoryZoom:', ev);
+	    var scaleEl = document.querySelector('#historyZoomScale');
+	    var elClientX = scaleEl.getBoundingClientRect().left;
+	    if (ev.type === 'mousemove' && ev.buttons === 0) {
+		// console.log('dragHistoryZoom: no buttons pushed, bailing');
+		return false;
+	    }
+	    // console.log(
+	    // 	'dragoverHistoryZoom:',
+	    // 	'startValue', this.historyZoomDragStartValue,
+	    // 	'clientX', ev.clientX,
+	    // 	'startPosition', elClientX,
+	    // 	'clientWidth', scaleEl.clientWidth);
 			    
-		this.historyItemZoom = 
-		    this.historyZoomDragStartValue +
-		    (ev.clientX - this.historyZoomDragStartPosition) /
-		    scaleEl.clientWidth;
-	    }
-	    else {
-		console.log('dragoverHistoryZoom: bad classname:',
-			    ev.target.className, ev.target);
-	    }
+	    this.historyItemZoom = (ev.clientX - elClientX) / scaleEl.clientWidth;
 	    return false;
-	},
-
-	dropHistoryZoom:function(ev) {
-	    console.log('dropHistoryZoom:', ev);
-	    this.dragHistoryZoom(ev);
 	},
 
 	onCtxOpen: function (locals) {

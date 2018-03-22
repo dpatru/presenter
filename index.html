@@ -19,16 +19,12 @@
     </style>
     <div id="presenter">
       <div id="historyZoomScale"
-	   class="dragHistoryZoomTarget"
 	   style="outline:red solid 1px;height:1em;width:100%; position: relative; margin-bottom: 1em"
-	   v-on:dragover="dragoverHistoryZoom"
-	   v-on:drop="dropHistoryZoom"
+	   v-on:click="dragHistoryZoom"
+	   v-on:mousemove="dragHistoryZoom"
 	   >
 	<div id="historyZoomSlider"
-	     class="dragHistoryZoomTarget"
 	     v-bind:style="{ position: 'relative', height: '100%', width: '5%', left: 95 * this.historyItemZoom + '%', background: 'red', textAlign: 'center', cursor: 'pointer'} "
-	     draggable="true"
-	     v-on:dragstart="dragstartHistoryZoom"
 	     >
 	  {{ Math.round(historyItemZoom * 100) + '%' }}
 	</div>
