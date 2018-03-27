@@ -80,7 +80,12 @@
 	     v-bind:style="historyItemWrapperStyle()">
 	  <div v-bind:style="historyFooterStyle()"> Add </div>
 	</div>
-    </draggable>
+      </draggable>
+      <div class="warning" v-if="warning">
+	<div style="float: right; cursor: pointer"
+	     v-on:click="warning=''" >X</div>
+	<div v-html="warning"></div>
+      </div>
       <table>
 	<tr>
 	  <th>Edit HTML <label> {{editing}} <br> <input type="range" min="0" :max="history.length-1" v-model="editing"></label>
