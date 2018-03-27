@@ -4,3 +4,5 @@
 .whiteOnBlack {color:white; background-color:black; padding:1em; margin:0; white-space:pre-wrap} 
 .whiteOnBlack em.hilite {font-style: normal; color:yellow} 
 .whiteOnBlack em.bold {font-style:normal;color:lightcoral}
+
+.warning { background: #ffa; color: #444; border-top: red solid 1em; border-bottom: red solid 1em; padding: 1em; margin: 1em 0}
