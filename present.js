@@ -62,7 +62,9 @@ var app = new Vue({
 	contextMenuData: {},
 	clicked: 0,
 	// dblclicked: false,
-	clickDelay: 90
+	clickDelay: 90,
+	warning:'',
+	displayWindowError: false
     },
     
     // beforeCreate: function() {
@@ -82,6 +84,37 @@ var app = new Vue({
     // },
     
     methods: {
+	displayWindow: function() {
+	    console.log("displayWindow");
+	    var r = this.display.window;
+	    if (!r) {
+		this.warning = "displayWindow: no display window";
+		console.log(this.warning);
+	    }
+	    else if (r.closed) {
+		this.warning = "displayWindow: display window is closed";
+		console.log(this.warning);
+	    }
+	    else {
+		this.displayWindowError = false;
+		this.warning = '';
+		return r;
+	    }
+	    if (this.displayWindowError) {
+		this.warning += "Can't recover.";
+		throw "Display window error."
+	    }
+	    this.displayWindowError = true;
+	    console.log("displayWindow: handling error");
+	    this.getDisplay();
+	    return this.displayWindow;
+	},
+
+
+	displayWindowIsClosed: function() {
+	     return !this.display.window || this.display.window.closed || !this.display.window.document.body.clientWidth || !this.display.window.document.body.clientHeight;
+	},
+
 	html: function(n) {
 	    return emphasize(this.history[n].html);
 	},
@@ -286,7 +319,7 @@ var app = new Vue({
 	
 	historyItemStyle: function(n){
 	    // set the zoom level
-	    var w = this.displayWindow;
+	    var w = this.displayWindow();
 	    if (!w) {
 		console.log("historyItemStyle: Error: couldn't get display");
 		return {};
@@ -305,7 +338,7 @@ var app = new Vue({
 	    });
 	},
 	renderAreaScale: function() {
-	    var w = this.displayWindow;
+	    var w = this.displayWindow();
 	    if (!w) {
 		console.log("renderAreaScale: Error: couldn't get display");
 		return -1;
@@ -314,7 +347,7 @@ var app = new Vue({
 	},
 	renderAreaWrapperStyle: function(n){
 	    // set the size, but not the zoom level
-	    var w = this.displayWindow;
+	    var w = this.displayWindow();
 	    if (!w) {
 		console.log("renderAreaWrapperStyle: Error: couldn't get display");
 		return {};
@@ -337,7 +370,7 @@ var app = new Vue({
 	},
 	renderAreaStyle: function(n){
 	    // set the zoom level
-	    var w = this.displayWindow;
+	    var w = this.displayWindow();
 	    if (!w) {
 		console.log("renderAreaStyle: Error: couldn't get display");
 		return {};
@@ -357,7 +390,7 @@ var app = new Vue({
 	    });
 	},
 	displayAreaScale: function() {
-	    var w = this.displayWindow;
+	    var w = this.displayWindow();
 	    if (!w) {
 		console.log("displayAreaScale: Error: couldn't get display");
 		return -1;
@@ -366,7 +399,7 @@ var app = new Vue({
 	},
 	displayAreaWrapperStyle: function(n){
 	    // set the size, but not the zoom level
-	    var w = this.displayWindow;
+	    var w = this.displayWindow();
 	    if (!w) {
 		console.log("displayAreaWrapperStyle: Error: couldn't get display");
 		return {};
@@ -389,7 +422,7 @@ var app = new Vue({
 	},
 	displayAreaStyle: function(n){
 	    // set the zoom level
-	    var w = this.displayWindow;
+	    var w = this.displayWindow();
 	    if (!w) {
 		console.log("displayAreaStyle: Error: couldn't get display");
 		return {};
@@ -442,15 +475,21 @@ var app = new Vue({
 		throw 'getDisplay: null display.window, bailing out';
 		return;
 	    }
-	    this.updateDisplayDimensions();
-	    this.updateDisplayScroll();
-	    this.setDisplayWindowListeners();
+	    var me = this;
+	    setTimeout(function() {
+		me.updateDisplayDimensions();
+		me.updateDisplayScroll();
+		me.setDisplayWindowListeners();
+		me.setDisplay()
+	    }, 500);
+	    
 	    return this.display.window;
 	},
 
 	setDisplayWindowListeners: function() {
 	    var me = this;
-	    var w = this.displayWindow;
+	    var w = this.displayWindow();
+	    console.log("setDisplayWindowListeners");
 	    try {
 		if (!w) {
 		    console.error('getDisplay: Error trying to set callbacks on null displayWindow, bailing out');
@@ -466,7 +505,7 @@ var app = new Vue({
 		};
 		w.onclose = function() {
 		    console.log('onclose callback');
-		    me.displayWindow = 0;
+		    me.display.window = 0;
 		};
 	    }
 	    catch(error) {
@@ -476,18 +515,23 @@ var app = new Vue({
 
 	updateDisplayDimensions: function() {
 	    console.log('updateDisplayDimensions');
-	    var w = this.displayWindow;
+	    var w = this.displayWindow();
 	    if (!w) {
-		console.log('updateDisplayDimensions: Error: window is null');
+		this.warning = 'updateDisplayDimensions: Error: window is null';
+		console.log(this.warning);
 	    }
 	    this.display.width = w.document.body.clientWidth;
 	    this.display.height = w.document.body.clientHeight;
+	    if (!this.display.width || !this.display.height) {
+		this.warning = "Display has bad dimensions: width = " + this.display.width + ", height = " + this.display.height;
+		console.log(this.warning);
+	    }
 	    return false; // stopPropogation
 	},
 	
 	updateDisplayScroll: function() {
 	    console.log('updateDisplayScroll');
-	    var w = this.displayWindow;
+	    var w = this.displayWindow();
 	    if (!w) {
 		console.log('updateDisplayScroll: Error: window is null');
 	    }
@@ -497,8 +541,9 @@ var app = new Vue({
 	},
 
 	setDisplay: function() {
+	    console.log("setDisplay");
 	    var s = this.displayingSlide;
-	    var w = this.displayWindow;
+	    var w = this.displayWindow();
 	    if (!w) {
 		console.log('displayingSlide: Error: no display');
 		return;
@@ -520,37 +565,29 @@ var app = new Vue({
 	    this.setDisplay();
 	},
 
-	displayWindow: function() {
-	    console.log('watching displayWindow');
-	    if (!this.displayWindow || this.displayWindow.closed) {
-		console.log('watching displayWindow: can not open display');
-		throw 'watching displayWindow: can not open display';
-		this.getDisplay();
-		this.setDisplay();
-	    }
-	},
-
-	// displayWindowIsClosed: function() {
-	//     console.log('watching displayWindowIsClosed');
+	// displayWindow: function() {
+	//     console.log('watching displayWindow');
 	//     if (!this.displayWindow || this.displayWindow.closed) {
-	// 	console.log('watching displayWindowIsClosed: reopening display');
+	// 	console.log('watching displayWindow: can not open display');
+	// 	throw 'watching displayWindow: can not open display';
 	// 	this.getDisplay();
 	// 	this.setDisplay();
 	//     }
 	// },
 
+	displayWindowIsClosed: function() {
+	    console.log('watching displayWindowIsClosed');
+	    if (this.displayWindowIsClosed) {
+		this.warning = 'watching displayWindowIsClosed: closed display';
+		console.log(this.warning);
+		// this.getDisplay();
+		// this.setDisplay();
+	    }
+	},
+	
     },
     
     computed: {
-	displayWindow: function() {
-	    return this.display.window || this.getDisplay();
-	},
-
-	// displayWindowIsClosed: function() {
-	//     return false;
-	//     return !this.display.window || this.display.window.closed;
-	// },
-
 	editingSlide: function() {
 	    var s = this.history[this.editing];
 	    return {
