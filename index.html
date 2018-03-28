@@ -121,12 +121,33 @@
       </div>
       <table>
 	<tr>
-	  <th>Edit HTML <label> {{editing}} <br> <input type="range" min="0" :max="history.length-1" v-model="editing"></label>
+	  <th>
+	    Edit HTML
+	    <label for="editingRange"> {{editing}} </label><br>
+	    <a v-on:click="editing = Math.max(0, editing-1); return false;"
+	       style="cursor:pointer"> - </a>
+	    <input type="range" min="0" id="editingRange"
+		   :max="history.length-1" v-model="editing">
+	    <a v-on:click="editing = Math.min(history.length-1, editing+1); return false;"
+	       style="cursor:pointer"> + </a>
 	  </th>
-	  <th>Edit Rendered <label> {{editing}} <br> <input type="range" min="0" :max="history.length-1" v-model="editing"></label>
+	  <th>
+	    Edit Rendered
+	    <label for="editingRange"> {{editing}} </label><br>
+	    <a v-on:click="editing = Math.max(0, editing-1); return false;"
+	       style="cursor:pointer"> - </a>
+	    <input type="range" min="0" id="editingRange"
+		   :max="history.length-1" v-model="editing">
+	    <a v-on:click="editing = Math.min(history.length-1, editing+1); return false;"
+	       style="cursor:pointer"> + </a>
 	  </th>
 	  <th>Displaying
-	    <label> {{displaying}} <br> <input type="range" min="0" :max="history.length-1" v-model="displaying"></label>
+	    Displaying <label for="displayingRange"> {{displaying}} </label> <br>
+	    <a v-on:click="displaying = Math.max(0, displaying-1); return false;"
+	       style="cursor:pointer"> - </a>
+	    <input id="displayingRange" type="range" min="0" :max="history.length-1" v-model="displaying">
+	    <a v-on:click="displaying = Math.min(history.length-1, displaying+1); return false;"
+	       style="cursor:pointer"> + </a>
 	  </th>
 	</tr>
 	<tr><td>
