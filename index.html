@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <link rel="stylesheet" href="jquery-ui.css">
+    <script src="jquery-3.3.1.js"></script>
+    <script src="jquery-ui.js"></script>
+
+    <script src="marked.js"></script>
+    <script src="lodash.js"></script>
     <script src="vue.js"></script>
     <script src="Sortable.js"></script>
     <script src="vuedraggable.js"></script>
@@ -31,35 +37,57 @@
 	</div>
       </div>
 	
-      <context-menu ref="ctx"
-	@ctx-open="onCtxOpen"
-	@ctx-cancel="resetCtxLocals"
-	@ctx-close="onCtxClose">
-        <li class="ctx-header"
-	    v-if="contextMenuData.index != editing"
+      <context-menu ref="historyCtx"
+		    @ctx-open="onCtxOpen"
+		    @ctx-cancel="resetCtxLocals"
+		    @ctx-close="onCtxClose">
+	<li class="ctx-header">
+	  Slide Menu
+	</li>
+        <li class="ctx-item"
+	    v-if="contextMenuData.item && contextMenuData.index != editing"
 	    @click="editing = contextMenuData.index">
 	  Edit
 	</li>
-        <li class="ctx-header"
-	    v-if="contextMenuData.index != displaying"
+        <li class="ctx-item"
+	    v-if="contextMenuData.item && contextMenuData.index != displaying"
 	    @click="displaying = contextMenuData.index">
 	  Display
 	</li>
-        <li class="ctx-header"
+        <li class="ctx-item"
+	    v-if="contextMenuData.item"
 	    @click="duplicateSlide(contextMenuData.index)">
 	  Duplicate this slide
 	</li>
-        <li class="ctx-header"
+        <li class="ctx-item"
+	    v-if="contextMenuData.item"
 	    @click="insertNewSlide(contextMenuData.index)">
 	  Insert new slide before this one
 	</li>
-        <li class="ctx-header"
+        <li class="ctx-item"
+	    v-if="contextMenuData.item"
 	    @click="insertNewSlide(contextMenuData.index+1)">
 	  Append new slide after this one
 	</li>
-        <li class="ctx-header" v-if="history.length > 1"
+        <li class="ctx-item"
+	    v-if="history.length > 1 && contextMenuData.item"
 	    @click="confirm('Really delete?') && deleteSlide(contextMenuData.index)">
-	  Delete
+	  Delete this slide {{ contextMenuData.index }}
+	</li>
+	<li class="ctx-item"
+	    v-if="!contextMenuData.item"
+	    @click="confirm('Really delete all the slides?') && deleteAllSlides()">
+	  Delete All Slides
+	</li>
+	<li class="ctx-item"
+	    v-if="!contextMenuData.item && numberOfSavedSlides() > 0"
+	    @click="restore()">
+	  Recover {{ numberOfSavedSlides() }} saved slides from localStorage
+	</li>
+	<li class="ctx-item"
+	    v-if="!contextMenuData.item"
+	    @click="save()">
+	  Save slides to localStorage
 	</li>
       </context-menu>
       
@@ -71,13 +99,18 @@
 	     v-bind:style="historyItemWrapperStyle(index)"
 	     v-on:click="clickHistory(index)"
 	     v-on:dblclick="dblclickHistory(index)"
-	     @contextmenu.prevent="$refs.ctx.open($event, {item: item, index: index})"><div v-bind:style="historyItemStyle(index)" >
+	     @contextmenu.prevent="$refs.historyCtx.open($event, {item: item, index: index})"
+	     title="click to edit, double click to display, drag to reorder"><div v-bind:style="historyItemStyle(index)" >
 	    <div v-bind:style="slideStyle(index)"
 		 v-bind:class="className(index)"
-		 v-html="html(index)"></div>
+		 v-html="html(index)">
+
+	    </div>
 	  </div>
-	</div><div slot="footer" @click="insertNewSlide(history.length)"
-	     v-bind:style="historyItemWrapperStyle()">
+	</div><div slot="footer"
+		   @click="insertNewSlide(history.length)"
+		   @contextmenu.prevent="$refs.historyCtx.open($event, {})"
+		   v-bind:style="historyItemWrapperStyle()">
 	  <div v-bind:style="historyFooterStyle()"> Add </div>
 	</div>
       </draggable>
@@ -102,17 +135,49 @@
 	    <textarea id="content"
 		      style="display:block; box-sizing: border-box; width:100%"
 		      v-model="history[editing].html"
-		      placeholder="Put text here.">
+		      placeholder="Put text here."
+		      v-on:input="update">
 	    </textArea>
-	    
+	    <div id="markdownHelp">
+	      <input type="checkbox" id="markdownHelpToggle">
+	      <label for="markdownHelpToggle"
+		     title="Click for formatting help">?</label>
+	      <div class="markdownHelp" style="white-space:pre-wrap">
+		<label for="markdownHelpToggle" title="Close" style="float:right; cursor:pointer">X</label>
+*highlight* **red**
+		
+# Heading
+## Subheading
+_emphasize_ __strong__ ~~strike through~~
+1. Ordered List
+* Unordered List
+	```
+preserve
+line
+breaks
+```
+		
+[link](https://github.github.com/gfm)
+		
+[alternate link][1]
+[1]: https://github.github.com/gfm/
+
+![inline image alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 2")
+
+![Reference-style image][logo]
+[logo]: https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 2"
+		
+<a href="https://github.github.com/gfm/">More on Markdown syntax</a>
+	      </div>
+	    </div>
 	    <label>fontSize
 	      <span id="fontSize">{{history[editing].fontSize}} em</span>
-	      <input type="range" min="1" max="10" step=".1" value="1" v-model="history[editing].fontSize">
+	      <input type="range" min="1" max="20" step=".1" value="1" v-model="history[editing].fontSize">
 	    </label>
 	    <br>
 	    <label>padding
 	      <span id="padding">{{history[editing].padding}} px</span>
-	      <input type="range" min="0" max="100" step="1" v-model="history[editing].padding">
+	      <input type="range" min="0" max="400" step="1" v-model="history[editing].padding">
 	    </label>
 	    <br>
 	    <label>
@@ -142,7 +207,6 @@
 	    </div>
       </td></tr></table>
     </div>
-    <script src="jquery-3.3.1.js"></script>
     <script src="present.js"></script>
   </body>
 </html>

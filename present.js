@@ -25,6 +25,7 @@ function escapeHtml(unsafe) {
 }
 var emphPattern = /(\W)\*(\w.*\S)\*(\W)/.compile()
 function emphasize(txt) {
+    console.log('emphasize:',txt);
     return txt
 	.replace(/(\W)\*\*(\w.*?\S)\*\*(\W)/g,
 		 function(m,m1,m2,m3){
@@ -35,10 +36,11 @@ function emphasize(txt) {
 }
 
 
-var displayStyleSheet = {
-    blackOnWhite: "body {padding:1em; margin:0; white-space:pre-wrap} em.hilite {font-style:normal; background:yellow} em.bold {font-style:normal; color:red}",
-    whiteOnBlack: "body {color:white; background-color:black; padding:1em; margin:0; white-space:pre-wrap} em.hilite {font-style: normal; color:yellow} em.bold {font-style:normal;color:lightcoral}"
-};
+
+// var displayStyleSheet = {
+//     blackOnWhite: "body {padding:1em; margin:0; white-space:pre-wrap} em.hilite {font-style:normal; background:yellow} em.bold {font-style:normal; color:red}",
+//     whiteOnBlack: "body {color:white; background-color:black; padding:1em; margin:0; white-space:pre-wrap} em.hilite {font-style: normal; color:yellow} em.bold {font-style:normal;color:lightcoral}"
+// };
 
 var app = new Vue({
     el: "#presenter",
@@ -75,6 +77,10 @@ var app = new Vue({
     created: function() {
 	console.log('created');
 	var w = this.getDisplay();
+	var me = this;
+	// this.$watch('history',
+	// 	    function() {me.save()},
+	// 	    {deep:true});
     },
     
     // mounted: function() {
@@ -84,7 +90,13 @@ var app = new Vue({
     // },
     
     methods: {
+	update: _.debounce(function (e) {
+	    this.history[this.editing].html = e.target.value;
+	    this.history[this.editing]
+	}, 300),
+	
 	displayWindow: function() {
+	    // throw 'displayWindow';
 	    console.log("displayWindow");
 	    var r = this.display.window;
 	    if (!r) {
@@ -116,7 +128,9 @@ var app = new Vue({
 	},
 
 	html: function(n) {
-	    return emphasize(this.history[n].html);
+	    // https://vuejs.org/v2/examples/
+	    return marked(emphasize(this.history[n].html),
+			  { sanitize: false});
 	},
 	
 	dragHistoryZoom: function(ev) {
@@ -378,7 +392,7 @@ var app = new Vue({
 	    return merge(this.colors(n), {
 		display: "inline-block",
 		outline: "gray solid 1px",
-		overflow: "hidden",
+		overflow: "auto",
 		// zoom: this.historyItemZoom,
 		transform: "scale("+this.renderAreaScale()+")",
 		transformOrigin: "top left",
@@ -430,7 +444,7 @@ var app = new Vue({
 	    return merge(this.colors(n), {
 		display: "inline-block",
 		outline: "gray solid 1px",
-		overflow: "hidden",
+		overflow: "auto",
 		// zoom: this.historyItemZoom,
 		transform: "scale("+this.displayAreaScale()+")",
 		transformOrigin: "top left",
@@ -448,9 +462,10 @@ var app = new Vue({
 	slideStyle: function(n) {
 	    var slide = this.history[n];
 	    return merge(this.colors(n), {
+		overflow: 'auto',
 		padding: slide.padding+'px',
 		margin: 0,
-		whiteSpace: 'pre-wrap',
+		// whiteSpace: 'pre-wrap',
 		fontSize: slide.fontSize+'em'
 	    });
 	},
@@ -549,31 +564,59 @@ var app = new Vue({
 		return;
 	    }
 	    w.document.body.innerHTML =
-		"<style> @import 'styles.css' </style>" + s.html;
+		"<style> @import 'styles.css' </style>" +
+		this.html(this.displaying);
 
 	    for (var p in s.style) {
 		w.document.body.style[p] = s.style[p];
 	    }
 
 	    w.document.body.className = this.className(this.displaying);
+	},
+
+	numberOfSavedSlides: function() {
+	    return window.localStorage.historyLength || 0;
+	},
+	
+	save: function() {
+	    console.log('save');
+	    var h = this.history;
+	    localStorage.historyLength = h.length;
+	    for (var i = 0; i < h.length; i++) {
+		console.log('save: i', i, h[i]);
+		var s = localStorage['history'+i] = `${h[i].id}
+${h[i].colors}
+${h[i].fontSize}
+${h[i].padding}
+${h[i].html}
+`
+	    }
+	},
+
+	restore: function() {
+	    console.log("restore");
+	    if (!localStorage.historyLength) {
+		console.log("restore: no history");
+		return false;
+	    }
+	    for (var i = 0; i < localStorage.historyLength; i++) {
+		var x = localStorage['history'+i].split('\n');
+		this.history.push({id: this.nextSlide++, colors: x[1], fontSize: x[2], padding: x[3], html: x.slice(4).join('\n')});
+		console.log('restore', history[i]);
+	    }
+	    return true;
 	}
+		
+	
+	    
 	
     },
     watch: {
+
 	displayingSlide: function() {
 	    // console.log('displayingSlide has changed, setting display');
 	    this.setDisplay();
 	},
-
-	// displayWindow: function() {
-	//     console.log('watching displayWindow');
-	//     if (!this.displayWindow || this.displayWindow.closed) {
-	// 	console.log('watching displayWindow: can not open display');
-	// 	throw 'watching displayWindow: can not open display';
-	// 	this.getDisplay();
-	// 	this.setDisplay();
-	//     }
-	// },
 
 	displayWindowIsClosed: function() {
 	    console.log('watching displayWindowIsClosed');
@@ -591,7 +634,9 @@ var app = new Vue({
 	editingSlide: function() {
 	    var s = this.history[this.editing];
 	    return {
-		id: s.id, html: emphasize(s.html), colors: s.colors,
+		id: s.id,
+		html: this.html(this.editing),
+		colors: s.colors,
 		fontSize: s.fontSize, padding: s.padding,
 		style: this.slideStyle(this.editing),
 		className: this.className(this.editing)
@@ -600,7 +645,9 @@ var app = new Vue({
 
 	displayingSlide: function() {
 	    var s = this.history[this.displaying];
-	    return {id: s.id, html: emphasize(s.html), colors: s.colors,
+	    return {id: s.id,
+		    html: this.html(this.displaying),
+		    colors: s.colors,
 		    fontSize: s.fontSize, padding: s.padding,
 		    style: this.slideStyle(this.displaying),
 		    className: this.className(this.displaying)
