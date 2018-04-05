@@ -100,7 +100,11 @@
 	     v-on:click="clickHistory(index)"
 	     v-on:dblclick="dblclickHistory(index)"
 	     @contextmenu.prevent="$refs.historyCtx.open($event, {item: item, index: index})"
-	     title="click to edit, double click to display, drag to reorder"><div v-bind:style="historyItemStyle(index)" >
+	     title="click to edit, double click to display, drag to reorder">
+	  <div v-bind:style="historyItemStyle(index)"
+	       v-bind:id="'history'+index"
+	       v-on:scroll="setDisplayScroll(index, 'history'+index)"
+	       >
 	    <div v-bind:style="slideStyle(index)"
 		 v-bind:class="className(index)"
 		 v-html="html(index)">
@@ -212,16 +216,26 @@ breaks
 	    </label>
 	  </td><td id="renderArea">
 	    <div v-bind:style="renderAreaWrapperStyle(editing)">
-	      <div v-bind:style="renderAreaStyle(editing)" >
-		<div v-bind:style="slideStyle(editing)"
+	      <div v-bind:style="renderAreaStyle(editing)"
+		   id="renderAreaDivDiv"
+		   v-on:scroll="setEditScroll"
+		   >
+		<div id="renderDiv"
+		     v-bind:style="slideStyle(editing)"
 		     v-bind:class="editingSlide.className"
 		     v-html="editingSlide.html"></div>
 	      </div>
 	    </div>
-	  </td><td id="displayArea">
-	    <div v-bind:style="displayAreaWrapperStyle(displaying)">
-	      <div v-bind:style="displayAreaStyle(displaying)" >
-		<div v-bind:style="slideStyle(displaying)"
+	  </td><td id="displayArea"
+		   onscroll="console.log('displayArea scroll'); return false;">
+	    <div v-bind:style="displayAreaWrapperStyle(displaying)"
+		 onscroll="console.log('displayArea div scroll'); return false;">
+	      <div v-bind:style="displayAreaStyle(displaying)"
+		   id="displayAreaDivDiv"
+		   v-on:scroll="setDisplayScroll(displaying, 'displayAreaDivDiv')">
+		<div id="displayDiv"
+		     onscroll="console.log('displayArea div div div scroll'); return false;"
+		     v-bind:style="slideStyle(displaying)"
 		     v-bind:class="displayingSlide.className"
 		     v-html="displayingSlide.html"></div>
 	      </div>

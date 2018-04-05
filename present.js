@@ -25,7 +25,7 @@ function escapeHtml(unsafe) {
 }
 var emphPattern = /(\W)\*(\w.*\S)\*(\W)/.compile()
 function emphasize(txt) {
-    console.log('emphasize:',txt);
+    // console.log('emphasize:',txt);
     return txt
 	.replace(/(\W)\*\*(\w.*?\S)\*\*(\W)/g,
 		 function(m,m1,m2,m3){
@@ -49,9 +49,16 @@ var app = new Vue({
 	historyItemZoom: .15,
 	history: [
 	    {id: 0, html: 'one', colors: 'blackOnWhite',
-	     fontSize: 1, padding: 10},
+	     fontSize: 1, padding: 10,
+	     displayScrollLeft: 0, displayScrollTop: 0,
+	     editScrollLeft: 0, editScrollTop: 0,
+	    },
 	    {id: 1, html: 'two', colors: 'whiteOnBlack',
-	     fontSize: 1, padding: 10}],
+	     fontSize: 1, padding: 10,
+	     displayScrollLeft: 0, displayScrollTop: 0,
+	     editScrollLeft: 0, editScrollTop: 0
+	    }
+	],
 	nextSlide: 2,
 	displaying: 0,
 	editing: 0,
@@ -68,11 +75,6 @@ var app = new Vue({
 	warning:'',
 	displayWindowError: false
     },
-    
-    // beforeCreate: function() {
-    // 	console.log('beforeCreate');
-    // 	//var w = this.getDisplay();
-    // },
     
     created: function() {
 	console.log('created');
@@ -95,32 +97,32 @@ var app = new Vue({
 	    this.history[this.editing]
 	}, 300),
 	
-	displayWindow: function() {
-	    // throw 'displayWindow';
-	    console.log("displayWindow");
-	    var r = this.display.window;
-	    if (!r) {
-		this.warning = "displayWindow: no display window";
-		console.log(this.warning);
-	    }
-	    else if (r.closed) {
-		this.warning = "displayWindow: display window is closed";
-		console.log(this.warning);
-	    }
-	    else {
-		this.displayWindowError = false;
-		this.warning = '';
-		return r;
-	    }
-	    if (this.displayWindowError) {
-		this.warning += "Can't recover.";
-		throw "Display window error."
-	    }
-	    this.displayWindowError = true;
-	    console.log("displayWindow: handling error");
-	    this.getDisplay();
-	    return this.displayWindow;
-	},
+	// displayWindow: function() {
+	//     // throw 'displayWindow';
+	//     console.log("displayWindow");
+	//     var r = this.display.window;
+	//     if (!r) {
+	// 	this.warning = "displayWindow: no display window";
+	// 	console.log(this.warning);
+	//     }
+	//     else if (r.closed) {
+	// 	this.warning = "displayWindow: display window is closed";
+	// 	console.log(this.warning);
+	//     }
+	//     else {
+	// 	this.displayWindowError = false;
+	// 	this.warning = '';
+	// 	return r;
+	//     }
+	//     if (this.displayWindowError) {
+	// 	this.warning += "Can't recover.";
+	// 	throw "Display window error."
+	//     }
+	//     this.displayWindowError = true;
+	//     console.log("displayWindow: handling error");
+	//     this.getDisplay();
+	//     return this.displayWindow;
+	// },
 
 
 	displayWindowIsClosed: function() {
@@ -135,6 +137,7 @@ var app = new Vue({
 	
 	dragHistoryZoom: function(ev) {
 	    // console.log('dragHistoryZoom:', ev);
+	    // maybe use requestAnimationFrame? see https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
 	    var scaleEl = document.querySelector('#historyZoomScale');
 	    var elClientX = scaleEl.getBoundingClientRect().left;
 	    if (ev.type === 'mousemove' && ev.buttons === 0) {
@@ -218,6 +221,11 @@ var app = new Vue({
 
 	},
 
+	deleteAllSlides: function() {
+	    this.editing = this.displaying = 0;
+	    while(this.history.length > 1) this.history.pop();
+	},
+	
 	confirm: function(msg) {
 	    return window.confirm(msg);
 	},
@@ -333,17 +341,17 @@ var app = new Vue({
 	
 	historyItemStyle: function(n){
 	    // set the zoom level
-	    var w = this.displayWindow();
+	    var w = this.display.window;
 	    if (!w) {
 		console.log("historyItemStyle: Error: couldn't get display");
 		return {};
 	    }
 	    return merge(this.colors(n), {
 		// outline: "red solid 2px",
-		// overflow: "hidden",
+		overflow: "auto",
 		// zoom: this.historyItemZoom,
 		transform: "scale("+this.historyItemZoom+")",
-		transformOrigin: "top left",
+		transformOrigin: "left top",
 		// fontSize: "1em",
 		// textSizeAdjust: "auto",
 		// fontSizeAdjust: "auto",
@@ -352,7 +360,7 @@ var app = new Vue({
 	    });
 	},
 	renderAreaScale: function() {
-	    var w = this.displayWindow();
+	    var w = this.display.window;
 	    if (!w) {
 		console.log("renderAreaScale: Error: couldn't get display");
 		return -1;
@@ -361,7 +369,7 @@ var app = new Vue({
 	},
 	renderAreaWrapperStyle: function(n){
 	    // set the size, but not the zoom level
-	    var w = this.displayWindow();
+	    var w = this.display.window;
 	    if (!w) {
 		console.log("renderAreaWrapperStyle: Error: couldn't get display");
 		return {};
@@ -384,7 +392,7 @@ var app = new Vue({
 	},
 	renderAreaStyle: function(n){
 	    // set the zoom level
-	    var w = this.displayWindow();
+	    var w = this.display.window;
 	    if (!w) {
 		console.log("renderAreaStyle: Error: couldn't get display");
 		return {};
@@ -395,7 +403,7 @@ var app = new Vue({
 		overflow: "auto",
 		// zoom: this.historyItemZoom,
 		transform: "scale("+this.renderAreaScale()+")",
-		transformOrigin: "top left",
+		transformOrigin: "left top",
 		fontSize: "1em",
 		textSizeAdjust: "auto",
 		fontSizeAdjust: "auto",
@@ -404,7 +412,7 @@ var app = new Vue({
 	    });
 	},
 	displayAreaScale: function() {
-	    var w = this.displayWindow();
+	    var w = this.display.window;
 	    if (!w) {
 		console.log("displayAreaScale: Error: couldn't get display");
 		return -1;
@@ -413,7 +421,7 @@ var app = new Vue({
 	},
 	displayAreaWrapperStyle: function(n){
 	    // set the size, but not the zoom level
-	    var w = this.displayWindow();
+	    var w = this.display.window;
 	    if (!w) {
 		console.log("displayAreaWrapperStyle: Error: couldn't get display");
 		return {};
@@ -430,13 +438,14 @@ var app = new Vue({
 		fontSize: "1em",
 		textSizeAdjust: "auto",
 		fontSizeAdjust: "auto",
+		boxSizing: 'borderBox',
 		width: this.displayArea.width +'px',
 		height: w.document.body.clientHeight * s +'px'
 	    });
 	},
 	displayAreaStyle: function(n){
 	    // set the zoom level
-	    var w = this.displayWindow();
+	    var w = this.display.window;
 	    if (!w) {
 		console.log("displayAreaStyle: Error: couldn't get display");
 		return {};
@@ -447,10 +456,11 @@ var app = new Vue({
 		overflow: "auto",
 		// zoom: this.historyItemZoom,
 		transform: "scale("+this.displayAreaScale()+")",
-		transformOrigin: "top left",
+		transformOrigin: "left top",
 		fontSize: "1em",
 		textSizeAdjust: "auto",
 		fontSizeAdjust: "auto",
+		boxSizing: 'borderBox',
 		width: w.document.body.clientWidth +'px',
 		height: w.document.body.clientHeight +'px'
 	    });
@@ -503,20 +513,23 @@ var app = new Vue({
 
 	setDisplayWindowListeners: function() {
 	    var me = this;
-	    var w = this.displayWindow();
+	    var w = this.display.window;
 	    console.log("setDisplayWindowListeners");
 	    try {
 		if (!w) {
-		    console.error('getDisplay: Error trying to set callbacks on null displayWindow, bailing out');
+		    console.error('getDisplay: Error trying to set callbacks on null display window, bailing out');
 		    return;
 		}
 		w.onresize = function() {
 		    console.log('onresize callback');
 		    return me.updateDisplayDimensions();
 		};
-		w.document.onscroll = function() {
-		    console.log('onscroll callback');
-		    me.updateDisplayScroll();
+		w.document.onscroll = function(e) {
+		    console.log('onscroll callback', w.document.body.scrollTop);
+		    var h = me.history[me.displaying];
+		    h.displayScrollTop = w.document.body.scrollTop;
+		    h.displayScrollLeft = w.document.body.scrollLeft;
+		    // me.updateDisplayScroll();
 		};
 		w.onclose = function() {
 		    console.log('onclose callback');
@@ -530,7 +543,7 @@ var app = new Vue({
 
 	updateDisplayDimensions: function() {
 	    console.log('updateDisplayDimensions');
-	    var w = this.displayWindow();
+	    var w = this.display.window;
 	    if (!w) {
 		this.warning = 'updateDisplayDimensions: Error: window is null';
 		console.log(this.warning);
@@ -543,24 +556,105 @@ var app = new Vue({
 	    }
 	    return false; // stopPropogation
 	},
+
+	// updateScroll: function( index ) {
+	//     console.log('updateScroll');
+	//     var w = this.displayWindow();
+	//     if (!w) {
+	// 	console.log('updateScroll: Error: window is null');
+	//     }
+	//     var h = this.history[index];
+	//     h.displayScrollTop = w.document.body.scrollTop;
+	//     h.displayScrollLeft = w.document.body.scrollLeft;
+	//     return false;
+	// },
 	
 	updateDisplayScroll: function() {
 	    console.log('updateDisplayScroll');
-	    var w = this.displayWindow();
+	    var w = this.display.window;
 	    if (!w) {
 		console.log('updateDisplayScroll: Error: window is null');
 	    }
-	    this.display.scrollTop = w.document.body.scrollTop;
-	    this.display.scrollLeft = w.document.body.scrollLeft;
+	    var h = this.history[this.displaying];
+	    h.displayScrollTop = w.document.body.scrollTop;
+	    h.displayScrollLeft = w.document.body.scrollLeft;
 	    return false;
+	},
+
+	// updateEditScroll: function() {
+	//     console.log('updateDisplayScroll');
+	//     var w = this.displayWindow();
+	//     if (!w) {
+	// 	console.log('updateDisplayScroll: Error: window is null');
+	//     }
+	//     this.history[this.editing].ScrollTop = w.document.body.scrollTop;
+	//     this.history[this.editing].editScrollLeft = w.document.body.scrollLeft;
+	//     return false;
+	// },
+	// setDisplayScroll: function() {
+	//     console.log('setDisplayScroll');
+	//     var h = this.history[this.displaying];
+	//     var els = [document.getElementById('displayAreaDivDiv'),
+	// 	       this.displayWindow().document.body,
+	// 	       document.getElementById('history'+this.displaying)
+	// 	      ];
+	//     for (var el of els){
+	// 	if (el.scrollTop != h.displayScrollTop ||
+	// 	    el.scrollLeft != h.displayScrollLeft) {
+	// 	    console.log('setDisplayScroll: el', el);
+	// 	    h.displayScrollTop = el.scrollTop;
+	// 	    h.displayScrollLeft = el.scrollLeft;
+	// 	    break;
+	// 	}
+	//     }
+	//     for (var el of els) {
+	// 	console.log('setDisplayScroll: el', el);
+	// 	el.scrollTop = h.displayScrollTop;
+	// 	el.scrollLeft = h.displayScrollLeft;
+	//     }
+	// },
+
+
+	setDisplayScroll: function(index, id) {
+	    console.log('setDisplayScroll');
+	    var h = this.history[index];
+	    var el = document.getElementById(id);
+	    h.displayScrollLeft = el.scrollLeft;
+	    h.displayScrollTop = el.scrollTop;
+	    return;
+	    var h = this.history[index];
+	    var els = [document.getElementById('history'+index)];
+	    if (index === this.displaying) {
+		els.push(document.getElementById('displayAreaDivDiv'));
+		els.push(this.display.window.document.body);
+	    }
+	    // something changed, find the change and set displayScrollTop
+	    for (var el of els){
+		console.log('setDisplayScroll: examining element', el);
+		if (el.scrollTop != h.displayScrollTop ||
+		    el.scrollLeft != h.displayScrollLeft) {
+		    console.log('setDisplayScroll: found changing element', el);
+		    h.displayScrollTop = el.scrollTop;
+		    h.displayScrollLeft = el.scrollLeft;
+		    break;
+		}
+	    }
+	},
+
+	setEditScroll: function() {
+	    console.log('setEditScroll');
+	    var h = this.history[this.editing];
+	    var d = document.getElementById('renderAreaDivDiv');
+	    h.editScrollTop = d.scrollTop;
+	    h.editScrollLeft = d.scrollLeft;
 	},
 
 	setDisplay: function() {
 	    console.log("setDisplay");
 	    var s = this.displayingSlide;
-	    var w = this.displayWindow();
+	    var w = this.display.window;
 	    if (!w) {
-		console.log('displayingSlide: Error: no display');
+		console.log('setDisplay: Error: no display');
 		return;
 	    }
 	    w.document.body.innerHTML =
@@ -572,6 +666,10 @@ var app = new Vue({
 	    }
 
 	    w.document.body.className = this.className(this.displaying);
+
+	    w.document.body.scrollTop = s.displayScrollTop;
+	    w.document.body.scrollLeft = s.displayScrollLeft;
+	    // document.getElementById('displayAreaDivDiv').scrollTop = w.document.body
 	},
 
 	numberOfSavedSlides: function() {
@@ -588,6 +686,10 @@ var app = new Vue({
 ${h[i].colors}
 ${h[i].fontSize}
 ${h[i].padding}
+${h[i].editScrollLeft}
+${h[i].editScrollTop}
+${h[i].displayScrollLeft}
+${h[i].displayScrollTop}
 ${h[i].html}
 `
 	    }
@@ -601,21 +703,84 @@ ${h[i].html}
 	    }
 	    for (var i = 0; i < localStorage.historyLength; i++) {
 		var x = localStorage['history'+i].split('\n');
-		this.history.push({id: this.nextSlide++, colors: x[1], fontSize: x[2], padding: x[3], html: x.slice(4).join('\n')});
-		console.log('restore', history[i]);
+		this.history.push({id: this.nextSlide++, colors: x[1], fontSize: x[2], padding: x[3], editScrollLeft: x[4], editScrollTop: x[5], displayScrollLeft: x[6], displayScrollTop: x[7], html: x.slice(8).join('\n')});
+		console.log('restore history',
+			    this.history[this.history.length-1]);
 	    }
 	    return true;
-	}
-		
-	
-	    
+	}   
 	
     },
+    
     watch: {
 
+	displayScrollTop: function(newVal, oldVal) {
+	    // why is this needed?
+	    var h = this.history[this.displaying];
+	    var val = h.displayScrollTop;
+	    console.log('watch displayScrollTop: setting the scroll value on the elements to', val)
+	    var els = [
+		document.getElementById('history'+this.displaying),
+		document.getElementById('displayAreaDivDiv'),
+		this.display.window.document.body];
+	    for (let el of els) {
+		console.log("watch displayScrollTop: setting", el);
+		el.scrollTop = val;
+	    }
+	},
+		
+	displayScrollLeft: function(newVal, oldVal) {
+	    console.log('watch displayScrollLeft: setting the scroll value on the elements.');
+	    var h = this.history[this.displaying];
+	    var val = h.displayScrollLeft;
+	    var els = [
+		document.getElementById('history'+this.displaying),
+		document.getElementById('displayAreaDivDiv'),
+		this.display.window.document.body];
+	    for (let el of els) {
+		console.log("displayScrollLeft: setting", el);
+		el.scrollLeft = val;
+	    }
+	},
+		
+	editing: function() {
+	    // set the correct scrolling in the editing div
+	    // run in a timeout to give time to update the div contents.
+	    var me = this;
+	    window.setTimeout(function(){
+		var h = me.history[me.editing];
+		var d = document.getElementById('renderAreaDivDiv');
+		console.log('watch editing: h', h, ', d', d);
+		console.log('watch editing: setting correct scroll in div, editScrollTop =', h.editScrollTop, ', renderAreaDivDiv.scrollTop', d.scrollTop);
+		d.scrollTop = h.editScrollTop;
+		d.scrollLeft = h.editScrollLeft;
+		console.log('watch editing: after, editScrollTop =', h.editScrollTop, ', renderAreaDivDiv.scrollTop', d.scrollTop);
+	    }, 200);
+	},
+
+	displaying: function() {
+	    // set the correct scrolling in the display div and the display window.
+	    // run in a timeout to give time to update the div contents.
+	    var me = this;
+	    window.setTimeout(function(){
+		var h = me.history[me.displaying];
+		console.log(
+		    'watch displaying Timeout Callback: setting scrollTop in div to',
+		    h.displayScrollTop);
+		for (let d of [document.getElementById('displayAreaDivDiv'),
+			       me.display.window.document.body]) {
+		    d.scrollTop = h.displayScrollTop;
+		    d.scrollLeft = h.displayScrollLeft;
+		}},200);
+	},
+	
 	displayingSlide: function() {
 	    // console.log('displayingSlide has changed, setting display');
-	    this.setDisplay();
+	    return this.history[this.displaying];
+	    // this.setDisplay();
+	    // document.getElementById('displayAreaDivDiv').scrollTop = 
+	    // 	this.displayWindow().document.body.scrollTop =
+	    // 	this.history[this.displaying].displayScrollTop;
 	},
 
 	displayWindowIsClosed: function() {
@@ -627,6 +792,21 @@ ${h[i].html}
 		// this.setDisplay();
 	    }
 	},
+
+	history: function() {
+	    console.log('watch history: length', this.history.length);
+	    var me = this;
+	    // allow time for updating contents, then update scroll position.
+	    window.setTimeout(function() {
+		console.log('watch history: setTimeout callback');
+		for (var i = 0; i < me.history.length; i++) {
+		    console.log('watch history: setTimeout callback: i', i);
+		    var h = me.history[i];
+		    var el = document.getElementById('history'+i);
+		    el.scrollLeft = h.displayScrollLeft;
+		    el.scrollTop = h.displayScrollTop;
+		}}, 200);
+	}
 	
     },
     
@@ -665,7 +845,15 @@ ${h[i].html}
 		'body{font-size:'+this.display.fontSize+'em}'+
 		'</style>';
 	},
-	
+
+	displayScrollTop: function() {
+	    return this.history[this.displaying].displayScrollTop;
+	},
+
+	displayScrollLeft: function() {
+	    return this.history[this.displaying].displayScrollLeft;
+	}
+
     }
 });
 
@@ -695,102 +883,4 @@ areaRO.observe(document.querySelector('#displayArea'));
 areaRO.observe(document.querySelector('#renderArea'));
 
     
-// function sizePreview(){
-//     var previewScale = document.getElementById('previewScale').value;
-//     document.getElementById('previewScaleText').innerText = previewScale+'%';
-//     if (display && display.innerWidth) {
-// 	var preview = document.getElementById('preview');
-// 	preview.style.height = display.innerHeight * previewScale/100.0;
-// 	preview.style.width = display.innerWidth * previewScale/100.0;
-// 	var previewDocument = getPreviewDocument();
-// 	previewDocument.body.style.zoom = previewScale/100.0;
-// 	// previewDocument.body.style.transform = 'scale('+previewScale/100.0+')';
-// 	// previewDocument.body.style.transformOrigin = '0 0';
-// 	// previewDocument.body.style.margin = '0';
-// 	// previewDocument.body.style.padding = '1em';
-//     }
-// }
-// function runInDisplay(action) {
-//     // console.log('runInDisplay');
-//     if (!display) {
-// 	// console.log('no display');
-// 	// try to open an existing window and kill it
-// 	// If an existing window exists, then the onload event won't fire.
-// 	display = window.open('', 'display');
-// 	if (display) { display.close();	}
-// 	display = window.open('display.html', 'display');
-// 	display.onload = function(){
-// 	    // console.log('onload');
-// 	    action(display);
-// 	};
-//     }
-//     else if (display.closed) {
-// 	// console.log('closed display');
-// 	display = window.open('display.html', 'display');
-// 	display.onload = function(){ action(display); };
-//     }
-//     else {
-// 	// console.log('already opened display', display, display.document, display.document.readyState);
-// 	action(display);
-//     }
-//     display.onresize=sizePreview;
-// }
-
-// function $(id){return document.getElementById(id);}
-// function loadFile() {
-//     // https://stackoverflow.com/a/33641308/268040
-//     // https://developer.mozilla.org/en-US/docs/Web/API/File/Using_files_from_web_applications
-//     var file = document.getElementById("myFile").files[0];
-//     var reader = new FileReader();
-//     reader.onload = function (e) {
-// 	var textArea = document.getElementById("content");
-// 	textArea.value = e.target.result;
-//     };
-//     reader.readAsText(file);
-// }
-
-// function getPreviewDocument() {
-//     var frameRef = document.getElementById('preview');
-//     var d = frameRef.contentWindow
-//         ? frameRef.contentWindow.document
-//         : frameRef.contentDocument
-//     return d;
-// }
-// function updatePreview(){
-//     var d = getPreviewDocument();
-//     d.body.innerHTML = myhtml();
-// }
-
-// function setDisplay() {
-//     runInDisplay(function (d) {
-// 	d.document.body.innerHTML = myhtml();
-//     });
-// }
-
-// function updateDisplay(){
-//     updatePreview();
-//     setDisplay();
-// }
-    
-// function updateFontSize(s){
-//     var size = $('fontSize').innerText = s+'em';
-//     runInDisplay(function(d) {
-// 	var b = d.document.body;
-// 	b.style.fontSize = size;
-//     });
-//     getPreviewDocument().body.style.fontSize = size;
-// }
-// function maximize() {
-//     runInDisplay(function(d) {
-// 	var b = d.document.body;
-// 	for (var h = 1; h < 100; h++) {
-// 	    b.style.fontSize = h+"em"
-// 	    if (b.scrollHeight > b.clientHeight) {
-// 		h--;
-// 		b.style.textSize = h+"em"
-// 		break
-// 	    }
-// 	}
-//     });
-// }
 

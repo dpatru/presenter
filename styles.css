@@ -16,3 +16,4 @@
     background: #aff;
 }
 #markdownHelpToggle ~ div { display:none }
+p {margin:0}
