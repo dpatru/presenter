@@ -37,10 +37,6 @@ function emphasize(txt) {
 
 
 
-// var displayStyleSheet = {
-//     blackOnWhite: "body {padding:1em; margin:0; white-space:pre-wrap} em.hilite {font-style:normal; background:yellow} em.bold {font-style:normal; color:red}",
-//     whiteOnBlack: "body {color:white; background-color:black; padding:1em; margin:0; white-space:pre-wrap} em.hilite {font-style: normal; color:yellow} em.bold {font-style:normal;color:lightcoral}"
-// };
 
 var app = new Vue({
     el: "#presenter",
@@ -67,10 +63,8 @@ var app = new Vue({
 	display: {height:100, width: 100,
 		  scrollTop:0, scrollLeft:0, fontSize:1, window:0},
 	displayArea: {height:99, width: 99},
-	displayStyle: 'blackOnWhite',
 	contextMenuData: {},
 	clicked: 0,
-	// dblclicked: false,
 	clickDelay: 90,
 	warning:'',
 	displayWindowError: false
@@ -558,18 +552,6 @@ var app = new Vue({
 	    return false; // stopPropogation
 	},
 
-	// updateScroll: function( index ) {
-	//     console.log('updateScroll');
-	//     var w = this.displayWindow();
-	//     if (!w) {
-	// 	console.log('updateScroll: Error: window is null');
-	//     }
-	//     var h = this.history[index];
-	//     h.displayScrollTop = w.document.body.scrollTop;
-	//     h.displayScrollLeft = w.document.body.scrollLeft;
-	//     return false;
-	// },
-	
 	updateDisplayScroll: function() {
 	    console.log('updateDisplayScroll');
 	    var w = this.display.window;
@@ -582,40 +564,6 @@ var app = new Vue({
 	    return false;
 	},
 
-	// updateEditScroll: function() {
-	//     console.log('updateDisplayScroll');
-	//     var w = this.displayWindow();
-	//     if (!w) {
-	// 	console.log('updateDisplayScroll: Error: window is null');
-	//     }
-	//     this.history[this.editing].ScrollTop = w.document.body.scrollTop;
-	//     this.history[this.editing].editScrollLeft = w.document.body.scrollLeft;
-	//     return false;
-	// },
-	// setDisplayScroll: function() {
-	//     console.log('setDisplayScroll');
-	//     var h = this.history[this.displaying];
-	//     var els = [document.getElementById('displayAreaDivDiv'),
-	// 	       this.displayWindow().document.body,
-	// 	       document.getElementById('history'+this.displaying)
-	// 	      ];
-	//     for (var el of els){
-	// 	if (el.scrollTop != h.displayScrollTop ||
-	// 	    el.scrollLeft != h.displayScrollLeft) {
-	// 	    console.log('setDisplayScroll: el', el);
-	// 	    h.displayScrollTop = el.scrollTop;
-	// 	    h.displayScrollLeft = el.scrollLeft;
-	// 	    break;
-	// 	}
-	//     }
-	//     for (var el of els) {
-	// 	console.log('setDisplayScroll: el', el);
-	// 	el.scrollTop = h.displayScrollTop;
-	// 	el.scrollLeft = h.displayScrollLeft;
-	//     }
-	// },
-
-
 	setDisplayScroll: function(index, id) {
 	    console.log('setDisplayScroll');
 	    var h = this.history[index];
@@ -623,23 +571,6 @@ var app = new Vue({
 	    h.displayScrollLeft = el.scrollLeft;
 	    h.displayScrollTop = el.scrollTop;
 	    return;
-	    var h = this.history[index];
-	    var els = [document.getElementById('history'+index)];
-	    if (index === this.displaying) {
-		els.push(document.getElementById('displayAreaDivDiv'));
-		els.push(this.display.window.document.body);
-	    }
-	    // something changed, find the change and set displayScrollTop
-	    for (var el of els){
-		console.log('setDisplayScroll: examining element', el);
-		if (el.scrollTop != h.displayScrollTop ||
-		    el.scrollLeft != h.displayScrollLeft) {
-		    console.log('setDisplayScroll: found changing element', el);
-		    h.displayScrollTop = el.scrollTop;
-		    h.displayScrollLeft = el.scrollLeft;
-		    break;
-		}
-	    }
 	},
 
 	setEditScroll: function() {
@@ -776,12 +707,8 @@ ${h[i].html}
 	},
 	
 	displayingSlide: function() {
-	    // console.log('displayingSlide has changed, setting display');
-	    return this.history[this.displaying];
-	    // this.setDisplay();
-	    // document.getElementById('displayAreaDivDiv').scrollTop = 
-	    // 	this.displayWindow().document.body.scrollTop =
-	    // 	this.history[this.displaying].displayScrollTop;
+	    // console.log('watch displayingSlide, setting display');
+	    this.setDisplay();
 	},
 
 	displayWindowIsClosed: function() {
@@ -831,21 +758,17 @@ ${h[i].html}
 		    colors: s.colors,
 		    fontSize: s.fontSize, padding: s.padding,
 		    style: this.slideStyle(this.displaying),
-		    className: this.className(this.displaying)
+		    className: this.className(this.displaying),
+		    displayScrollLeft: s.displayScrollLeft,
+		    displayScrollTop: s.displayScrollTop,
 		   };
 	},
 	
-	previewDocument: function(){
-	    var frameRef = document.getElementById('preview');
-	    return frameRef.contentWindow ?
-		frameRef.contentWindow.document : frameRef.contentDocument;
-	},
-	
-	displayStyleSheet: function() {
-	    return '<style>'+displayStyleSheet[this.displayStyle]+
-		'body{font-size:'+this.display.fontSize+'em}'+
-		'</style>';
-	},
+	// displayStyleSheet: function() {
+	//     return '<style>'+displayStyleSheet[this.displayStyle]+
+	// 	'body{font-size:'+this.display.fontSize+'em}'+
+	// 	'</style>';
+	// },
 
 	displayScrollTop: function() {
 	    return this.history[this.displaying].displayScrollTop;
