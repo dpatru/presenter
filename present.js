@@ -227,6 +227,7 @@ var app = new Vue({
 	},
 	
 	confirm: function(msg) {
+	    return true; // skip confirmation
 	    return window.confirm(msg);
 	},
 
