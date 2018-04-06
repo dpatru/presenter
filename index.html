@@ -124,6 +124,8 @@
 	<div v-html="warning"></div>
       </div>
       <table>
+	<tr><td style="width:67%">
+      <table>
 	<tr>
 	  <th>
 	    Edit HTML
@@ -143,14 +145,6 @@
 	    <input type="range" min="0" id="editingRange"
 		   :max="history.length-1" v-model="editing">
 	    <a v-on:click="editing = Math.min(history.length-1, editing+1); return false;"
-	       style="cursor:pointer"> + </a>
-	  </th>
-	  <th>Displaying
-	    Displaying <label for="displayingRange"> {{displaying}} </label> <br>
-	    <a v-on:click="displaying = Math.max(0, displaying-1); return false;"
-	       style="cursor:pointer"> - </a>
-	    <input id="displayingRange" type="range" min="0" :max="history.length-1" v-model="displaying">
-	    <a v-on:click="displaying = Math.min(history.length-1, displaying+1); return false;"
 	       style="cursor:pointer"> + </a>
 	  </th>
 	</tr>
@@ -234,7 +228,20 @@ breaks
 		     v-html="editingSlide.html"></div>
 	      </div>
 	    </div>
-	  </td><td id="displayArea"
+	  </td>
+      </tr></table>
+	  </td><td><table><tr>
+	    	  <th>Displaying
+	    Displaying <label for="displayingRange"> {{displaying}} </label> <br>
+	    <a v-on:click="displaying = Math.max(0, displaying-1); return false;"
+	       style="cursor:pointer"> - </a>
+	    <input id="displayingRange" type="range" min="0" :max="history.length-1" v-model="displaying">
+	    <a v-on:click="displaying = Math.min(history.length-1, displaying+1); return false;"
+	       style="cursor:pointer"> + </a>
+	      </th></tr>
+
+<tr>
+	  <td id="displayArea"
 		   onscroll="console.log('displayArea scroll'); return false;">
 	    <div v-bind:style="displayAreaWrapperStyle(displaying)"
 		 onscroll="console.log('displayArea div scroll'); return false;">
@@ -248,6 +255,7 @@ breaks
 		     v-html="displayingSlide.html"></div>
 	      </div>
 	    </div>
+	    </td></tr></table>
       </td></tr></table>
     </div>
     <script src="present.js"></script>
