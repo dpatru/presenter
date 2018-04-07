@@ -183,9 +183,21 @@ var app = new Vue({
 	    return s;
 	},
 	    
-	insertNewSlide: function(position, duplicate) {
+	insertNewSlide: function(position, duplicate, append) {
+	    // Insert a new slide at position.  If duplicate flag is
+	    // true, duplicate the slide that was at position. If
+	    // append flag is true, insert at position+1.
 	    console.log("inserting at", position);
-	    this.history.splice(position, 0, this.newSlide(duplicate? position: -1));
+
+	    // base the new slide's style and content on the existing slide
+	    var newSlide = this.newSlide(position);
+ 	    if (!duplicate) { // discard the content, keep styling
+		newSlide.html = '';
+	    }
+	    this.history.splice(append? position+1: position, 0, newSlide);
+			
+	    // adjust editing and displaying pointers if they moved
+	    // because a new slide was inserted before them
 	    for (var p of ['editing', 'displaying']) {
 		if (position <= this[p]) {
 		    this[p] += 1;

@@ -66,7 +66,7 @@
 	</li>
         <li class="ctx-item"
 	    v-if="contextMenuData.item"
-	    @click="insertNewSlide(contextMenuData.index+1)">
+	    @click="insertNewSlide(contextMenuData.index, false, true)">
 	  Append new slide after this one
 	</li>
         <li class="ctx-item"
@@ -108,7 +108,7 @@
 	  </div>
 	</div><div slot="footer"
 		   title="click to add a slide"
-		   @click="insertNewSlide(history.length)"
+		   @click="insertNewSlide(history.length-1, false, true)"
 		   @contextmenu.prevent="$refs.historyCtx.open($event, {})"
 		   v-bind:style="historyItemWrapperStyle()">
 	  <div v-bind:style="historyFooterStyle()"> Add </div>
