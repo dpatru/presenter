@@ -143,7 +143,7 @@ var app = new Vue({
 	},
 
 	onCtxOpen: function (locals) {
-            console.log('open', locals)
+            console.log('onCtxOpen', locals)
             this.contextMenuData = locals
 	},
 
