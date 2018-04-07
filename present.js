@@ -621,10 +621,11 @@ var app = new Vue({
 				       {id:this.nextSlide++});
 		h.splice(i, 1, o2);
 	    }
-	    for (let p in this.savedProperties) {
+	    for (let p of this.savedProperties) {
 		// only restore defined values
-		if (localStorage[p] !== undefined) { 
-		    localStorage[p] = this[p];
+		if (localStorage[p] !== undefined && p in this) {
+		    // console.log('restore:', p, localStorage[p]);
+		    this[p] = localStorage[p];
 		}
 	    }
 
