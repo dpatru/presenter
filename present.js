@@ -757,7 +757,7 @@ var app = new Vue({
 
 	editingSlide: function() {
 	    console.log('watch editingSlide');
-	    for (let p in this.savedProperties) {
+	    for (let p of this.savedHistoryProperties) {
 		this.save('history.'+this.editing+'.'+p,
 			  this.history[this.editing][p]);
 	    }
