@@ -95,7 +95,7 @@
 	     v-on:click="clickHistory(index)"
 	     v-on:dblclick="dblclickHistory(index)"
 	     @contextmenu.prevent="$refs.historyCtx.open($event, {item: item, index: index})"
-	     title="click to edit, double click to display, drag to reorder">
+	     v-bind:title="'slide '+index+', click to edit, double click to display, drag to reorder'">
 	  <div v-bind:style="historyItemStyle(index)"
 	       v-bind:id="'history'+index"
 	       v-on:scroll="setDisplayScrollFromDisplayArea(index, 'history'+index)"
