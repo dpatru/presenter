@@ -66,17 +66,11 @@ var app = new Vue({
     },
     
     created: function() {
-	console.log('created');
+	// console.log('created');
 	var w = this.getDisplay();
 	this.restore();
 	var me = this;
     },
-    
-    // mounted: function() {
-    // 	console.log('mounted');
-    // 	// Called when application is mounted.
-    // 	var w = this.getDisplay();
-    // },
     
     methods: {
 	update: _.debounce(function (e) {
@@ -84,34 +78,6 @@ var app = new Vue({
 	    this.history[this.editing]
 	}, 300),
 	
-	// displayWindow: function() {
-	//     // throw 'displayWindow';
-	//     console.log("displayWindow");
-	//     var r = this.display.window;
-	//     if (!r) {
-	// 	this.warning = "displayWindow: no display window";
-	// 	console.log(this.warning);
-	//     }
-	//     else if (r.closed) {
-	// 	this.warning = "displayWindow: display window is closed";
-	// 	console.log(this.warning);
-	//     }
-	//     else {
-	// 	this.displayWindowError = false;
-	// 	this.warning = '';
-	// 	return r;
-	//     }
-	//     if (this.displayWindowError) {
-	// 	this.warning += "Can't recover.";
-	// 	throw "Display window error."
-	//     }
-	//     this.displayWindowError = true;
-	//     console.log("displayWindow: handling error");
-	//     this.getDisplay();
-	//     return this.displayWindow;
-	// },
-
-
 	displayWindowIsClosed: function() {
 	     return !this.display.window || this.display.window.closed || !this.display.window.document.body.clientWidth || !this.display.window.document.body.clientHeight;
 	},
@@ -143,7 +109,7 @@ var app = new Vue({
 	},
 
 	onCtxOpen: function (locals) {
-            console.log('onCtxOpen', locals)
+            // console.log('onCtxOpen', locals)
             this.contextMenuData = locals
 	},
 
@@ -165,7 +131,7 @@ var app = new Vue({
 	},
 
 	newSlide: function(i) {
-	    console.log('newSlide', i);
+	    // console.log('newSlide', i);
 	    if (this.history.length < 1) {
 		throw "newSlide Error: no items in history";
 	    }
@@ -183,7 +149,7 @@ var app = new Vue({
 	    // Insert a new slide at position.  If duplicate flag is
 	    // true, duplicate the slide that was at position. If
 	    // append flag is true, insert at position+1.
-	    console.log("inserting at", position);
+	    // console.log("inserting at", position);
 
 	    // base the new slide's style and content on the existing slide
 	    var newSlide = this.newSlide(position);
@@ -221,10 +187,10 @@ var app = new Vue({
 		    this[p] -= 1;
 		}
 	    }
-	    console.log('removing slide '+position);
-	    console.log(this.history.length);
+	    // console.log('deleteSlide: position',position,
+	    // 		', length', this.history.length);
 	    this.history.splice(position, 1);
-	    console.log(this.history.length);
+	    // console.log('deleteSlide: after length', this.history.length);
 
 	},
 
@@ -347,7 +313,7 @@ var app = new Vue({
 	    // set the zoom level
 	    var w = this.display.window;
 	    if (!w) {
-		console.log("historyItemStyle: Error: couldn't get display");
+		console.error("historyItemStyle: Error: couldn't get display");
 		return {};
 	    }
 	    return merge(this.colors(n), {
@@ -366,7 +332,7 @@ var app = new Vue({
 	renderAreaScale: function() {
 	    var w = this.display.window;
 	    if (!w) {
-		console.log("renderAreaScale: Error: couldn't get display");
+		console.error("renderAreaScale: Error: couldn't get display");
 		return -1;
 	    }
 	    return this.renderArea.width / w.document.body.clientWidth;
@@ -375,12 +341,12 @@ var app = new Vue({
 	    // set the size, but not the zoom level
 	    var w = this.display.window;
 	    if (!w) {
-		console.log("renderAreaWrapperStyle: Error: couldn't get display");
+		console.error("renderAreaWrapperStyle: Error: couldn't get display");
 		return {};
 	    }
 	    var s = this.renderAreaScale();
 	    if (s < 0) {
-		console.log("renderAreaWrapperStyle: Error: couldn't get scale");
+		console.error("renderAreaWrapperStyle: Error: couldn't get scale");
 		return {};
 	    }
 	    return merge(this.colors(n), {
@@ -398,7 +364,7 @@ var app = new Vue({
 	    // set the zoom level
 	    var w = this.display.window;
 	    if (!w) {
-		console.log("renderAreaStyle: Error: couldn't get display");
+		console.error("renderAreaStyle: Error: couldn't get display");
 		return {};
 	    }
 	    return merge(this.colors(n), {
@@ -418,7 +384,7 @@ var app = new Vue({
 	displayAreaScale: function() {
 	    var w = this.display.window;
 	    if (!w) {
-		console.log("displayAreaScale: Error: couldn't get display");
+		console.error("displayAreaScale: Error: couldn't get display");
 		return -1;
 	    }
 	    return this.displayArea.width / w.document.body.clientWidth;
@@ -427,12 +393,12 @@ var app = new Vue({
 	    // set the size, but not the zoom level
 	    var w = this.display.window;
 	    if (!w) {
-		console.log("displayAreaWrapperStyle: Error: couldn't get display");
+		console.error("displayAreaWrapperStyle: Error: couldn't get display");
 		return {};
 	    }
 	    var s = this.displayAreaScale();
 	    if (s < 0) {
-		console.log("displayAreaWrapperStyle: Error: couldn't get scale");
+		console.error("displayAreaWrapperStyle: Error: couldn't get scale");
 		return {};
 	    }
 	    return merge(this.colors(n), {
@@ -451,7 +417,7 @@ var app = new Vue({
 	    // set the zoom level
 	    var w = this.display.window;
 	    if (!w) {
-		console.log("displayAreaStyle: Error: couldn't get display");
+		console.error("displayAreaStyle: Error: couldn't get display");
 		return {};
 	    }
 	    return merge(this.colors(n), {
@@ -490,7 +456,7 @@ var app = new Vue({
 	// },
 	
 	getDisplay: function() {
-	    console.log("getDisplay");
+	    // console.log("getDisplay");
 	    if (!this.display.window || this.display.window.closed) {
 		this.display.window = 0;
 		var name = 'display', i=0;
@@ -518,25 +484,25 @@ var app = new Vue({
 	setDisplayWindowListeners: function() {
 	    var me = this;
 	    var w = this.display.window;
-	    console.log("setDisplayWindowListeners");
+	    // console.log("setDisplayWindowListeners");
 	    try {
 		if (!w) {
 		    console.error('getDisplay: Error trying to set callbacks on null display window, bailing out');
 		    return;
 		}
 		w.onresize = function() {
-		    console.log('onresize callback');
+		    // console.log('onresize callback');
 		    return me.updateDisplayDimensions();
 		};
 		w.document.onscroll = function(e) {
-		    console.log('onscroll callback', w.document.body.scrollTop);
+		    // console.log('onscroll callback', w.document.body.scrollTop);
 		    var h = me.history[me.displaying];
 		    h.displayScrollTop = w.document.body.scrollTop;
 		    h.displayScrollLeft = w.document.body.scrollLeft;
 		    // me.updateDisplayScroll();
 		};
 		w.onclose = function() {
-		    console.log('onclose callback');
+		    // console.log('onclose callback');
 		    me.display.window = 0;
 		};
 	    }
@@ -546,26 +512,26 @@ var app = new Vue({
 	},
 
 	updateDisplayDimensions: function() {
-	    console.log('updateDisplayDimensions');
+	    // console.log('updateDisplayDimensions');
 	    var w = this.display.window;
 	    if (!w) {
 		this.warning = 'updateDisplayDimensions: Error: window is null';
-		console.log(this.warning);
+		console.error(this.warning);
 	    }
 	    this.display.width = w.document.body.clientWidth;
 	    this.display.height = w.document.body.clientHeight;
 	    if (!this.display.width || !this.display.height) {
 		this.warning = "Display has bad dimensions: width = " + this.display.width + ", height = " + this.display.height;
-		console.log(this.warning);
+		console.error(this.warning);
 	    }
 	    return false; // stopPropogation
 	},
 
 	updateDisplayScrollFromDisplayWindow: function() {
-	    console.log('updateDisplayScrollFromDisplayWindow');
+	    // console.log('updateDisplayScrollFromDisplayWindow');
 	    var w = this.display.window;
 	    if (!w) {
-		console.log('updateDisplayScrollFromDisplayWindow: Error: window is null');
+		console.error('updateDisplayScrollFromDisplayWindow: Error: window is null');
 	    }
 	    var h = this.history[this.displaying];
 	    h.displayScrollTop = w.document.body.scrollTop;
@@ -574,7 +540,7 @@ var app = new Vue({
 	},
 
 	setDisplayScrollFromDisplayArea: function(index, id) {
-	    console.log('setDisplayScroll');
+	    // console.log('setDisplayScroll');
 	    var h = this.history[index];
 	    var el = document.getElementById(id);
 	    h.displayScrollLeft = el.scrollLeft;
@@ -583,7 +549,7 @@ var app = new Vue({
 	},
 
 	setEditScrollFromRenderArea: function() {
-	    console.log('setEditScroll');
+	    // console.log('setEditScroll');
 	    var h = this.history[this.editing];
 	    var d = document.getElementById('renderAreaDivDiv');
 	    h.editScrollTop = d.scrollTop;
@@ -595,11 +561,11 @@ var app = new Vue({
 	},
 
 	setDisplay: function() {
-	    console.log("setDisplay");
+	    // console.log("setDisplay");
 	    var s = this.displayingSlide;
 	    var w = this.display.window;
 	    if (!w) {
-		console.log('setDisplay: Error: no display');
+		console.error('setDisplay: Error: no display');
 		return;
 	    }
 	    w.document.body.innerHTML =
@@ -622,7 +588,7 @@ var app = new Vue({
 	},
 	
 	save: function(prop, val) {
-	    console.log('save', prop, val);
+	    // console.log('save', prop, val);
 	    if (prop) { // just save a specific property
 		localStorage[prop] = val;
 		return;
@@ -640,9 +606,9 @@ var app = new Vue({
 	},
 
 	restore: function() {
-	    console.log("restore");
+	    // console.log("restore");
 	    if (!localStorage.historyLength) {
-		console.log("restore: no history");
+		// console.log("restore: no history");
 		return false;
 	    }
 	    var h = this.history;
@@ -664,7 +630,7 @@ var app = new Vue({
 
 	    this.updateHistory();
 
-	    console.log('restore: done');
+	    // console.log('restore: done');
 	    return true;
 	},
 	
@@ -677,9 +643,9 @@ var app = new Vue({
 	    // dom contents to update.
 	    var me = this;
 	    window.setTimeout(function() {
-		console.log('updateHistory');
+		// console.log('updateHistory');
 		for (var i = 0; i < me.history.length; i++) {
-		    console.log('updateHistory: i', i);
+		    // console.log('updateHistory: i', i);
 		    var h = me.history[i];
 		    var el = document.getElementById('history'+i);
 		    el.scrollLeft = h.displayScrollLeft;
@@ -695,13 +661,13 @@ var app = new Vue({
 	    // why is this needed?
 	    var h = this.history[this.displaying];
 	    var val = h.displayScrollTop;
-	    console.log('watch displayScrollTop: setting the scroll value on the elements to', val)
+	    // console.log('watch displayScrollTop: setting the scroll value on the elements to', val)
 	    var els = [
 		document.getElementById('history'+this.displaying),
 		document.getElementById('displayAreaDivDiv'),
 		this.display.window.document.body];
 	    for (let el of els) {
-		console.log("watch displayScrollTop: setting to", val, el);
+		// console.log("watch displayScrollTop: setting to", val, el);
 		el.scrollTop = val;
 	    }
 	    this.save('history.'+this.displaying+'.displayScrollTop',
@@ -709,7 +675,7 @@ var app = new Vue({
 	},
 		
 	displayScrollLeft: function(newVal, oldVal) {
-	    console.log('watch displayScrollLeft: setting the scroll value on the elements.');
+	    // console.log('watch displayScrollLeft: setting the scroll value on the elements.');
 	    var h = this.history[this.displaying];
 	    var val = h.displayScrollLeft;
 	    var els = [
@@ -717,7 +683,7 @@ var app = new Vue({
 		document.getElementById('displayAreaDivDiv'),
 		this.display.window.document.body];
 	    for (let el of els) {
-		console.log("displayScrollLeft: setting", val, el);
+		// console.log("displayScrollLeft: setting", val, el);
 		el.scrollLeft = val;
 	    }
 	    this.save('history.'+this.displaying+'.displayScrollLeft',
@@ -732,11 +698,11 @@ var app = new Vue({
 	    window.setTimeout(function(){
 		var h = me.history[me.editing];
 		var d = document.getElementById('renderAreaDivDiv');
-		console.log('watch editing: h', h, ', d', d);
-		console.log('watch editing: setting correct scroll in div, editScrollTop =', h.editScrollTop, ', renderAreaDivDiv.scrollTop', d.scrollTop);
+		// console.log('watch editing: h', h, ', d', d);
+		// console.log('watch editing: setting correct scroll in div, editScrollTop =', h.editScrollTop, ', renderAreaDivDiv.scrollTop', d.scrollTop);
 		d.scrollTop = h.editScrollTop;
 		d.scrollLeft = h.editScrollLeft;
-		console.log('watch editing: after, editScrollTop =', h.editScrollTop, ', renderAreaDivDiv.scrollTop', d.scrollTop);
+		// console.log('watch editing: after, editScrollTop =', h.editScrollTop, ', renderAreaDivDiv.scrollTop', d.scrollTop);
 	    }, 200);
 	},
 
@@ -747,9 +713,7 @@ var app = new Vue({
 	    var me = this;
 	    window.setTimeout(function(){
 		var h = me.history[me.displaying];
-		console.log(
-		    'watch displaying Timeout Callback: setting scrollTop in div to',
-		    h.displayScrollTop);
+		// console.log('watch displaying Timeout Callback: setting scrollTop in div to', h.displayScrollTop);
 		for (let d of [document.getElementById('displayAreaDivDiv'),
 			       me.display.window.document.body]) {
 		    d.scrollTop = h.displayScrollTop;
@@ -758,7 +722,7 @@ var app = new Vue({
 	},
 
 	editingSlide: function() {
-	    console.log('watch editingSlide');
+	    // console.log('watch editingSlide');
 	    for (let p of this.savedHistoryProperties) {
 		this.save('history.'+this.editing+'.'+p,
 			  this.history[this.editing][p]);
@@ -771,17 +735,17 @@ var app = new Vue({
 	},
 
 	displayWindowIsClosed: function() {
-	    console.log('watching displayWindowIsClosed');
+	    // console.log('watching displayWindowIsClosed');
 	    if (this.displayWindowIsClosed) {
 		this.warning = 'watching displayWindowIsClosed: closed display';
-		console.log(this.warning);
+		console.warn(this.warning);
 		// this.getDisplay();
 		// this.setDisplay();
 	    }
 	},
 
 	history: function() {
-	    console.log('watch history: length', this.history.length);
+	    // console.log('watch history: length', this.history.length);
 	    var me = this;
 	    // allow time for updating contents, then update scroll position.
 	    me.save(); // save everything when history changes.
@@ -850,7 +814,7 @@ var areaRO = new ResizeObserver( function(entries) {
 	    app[id].height = cs.height;
 	}
 	else {
-	    console.log(id+' not in app');
+	    console.warn('ResizeObserver:', id, 'not in app');
 	}
 	
     }
