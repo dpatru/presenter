@@ -62,7 +62,7 @@ var app = new Vue({
 	warning:'',
 	displayWindowError: false,
 	savedHistoryProperties: ['colors', 'fontSize', 'padding', 'editScrollLeft', 'editScrollTop', 'displayScrollLeft', 'displayScrollTop', 'html'],
-	savedProperties: ['historyItemZoom', 'nextSlide', 'displaying', 'editing', 'clickDelay']
+	savedProperties: ['historyItemZoom', 'displaying', 'editing', 'clickDelay']
     },
     
     created: function() {
