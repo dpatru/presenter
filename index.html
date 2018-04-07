@@ -98,7 +98,7 @@
 	     title="click to edit, double click to display, drag to reorder">
 	  <div v-bind:style="historyItemStyle(index)"
 	       v-bind:id="'history'+index"
-	       v-on:scroll="setDisplayScroll(index, 'history'+index)"
+	       v-on:scroll="setDisplayScrollFromDisplayArea(index, 'history'+index)"
 	       >
 	    <div v-bind:style="slideStyle(index)"
 		 v-bind:class="className(index)"
@@ -216,7 +216,7 @@ breaks
 	    <div v-bind:style="renderAreaWrapperStyle(editing)">
 	      <div v-bind:style="renderAreaStyle(editing)"
 		   id="renderAreaDivDiv"
-		   v-on:scroll="setEditScroll"
+		   v-on:scroll="setEditScrollFromRenderArea"
 		   >
 		<div id="renderDiv"
 		     v-bind:style="slideStyle(editing)"
@@ -243,7 +243,7 @@ breaks
 		 onscroll="console.log('displayArea div scroll'); return false;">
 	      <div v-bind:style="displayAreaStyle(displaying)"
 		   id="displayAreaDivDiv"
-		   v-on:scroll="setDisplayScroll(displaying, 'displayAreaDivDiv')">
+		   v-on:scroll="setDisplayScrollFromDisplayArea(displaying, 'displayAreaDivDiv')">
 		<div id="displayDiv"
 		     onscroll="console.log('displayArea div div div scroll'); return false;"
 		     v-bind:style="slideStyle(displaying)"

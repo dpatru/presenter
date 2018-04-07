@@ -41,7 +41,6 @@ function emphasize(txt) {
 var app = new Vue({
     el: "#presenter",
     data: {
-	list: ['one','two','three'],
 	historyItemZoom: .15,
 	history: [
 	    {id: 0, html: 'one', colors: 'blackOnWhite',
@@ -62,21 +61,20 @@ var app = new Vue({
 	displayArea: {height:0, width: 0},
 	display: {height:100, width: 100,
 		  scrollTop:0, scrollLeft:0, fontSize:1, window:0},
-	displayArea: {height:99, width: 99},
 	contextMenuData: {},
 	clicked: 0,
-	clickDelay: 90,
+	clickDelay: 90, // dblclick threshold in ms.
 	warning:'',
-	displayWindowError: false
+	displayWindowError: false,
+	savedHistoryProperties: ['colors', 'fontSize', 'padding', 'editScrollLeft', 'editScrollTop', 'displayScrollLeft', 'displayScrollTop', 'html'],
+	savedProperties: ['historyItemZoom', 'nextSlide', 'displaying', 'editing', 'clickDelay']
     },
     
     created: function() {
 	console.log('created');
 	var w = this.getDisplay();
+	this.restore();
 	var me = this;
-	// this.$watch('history',
-	// 	    function() {me.save()},
-	// 	    {deep:true});
     },
     
     // mounted: function() {
@@ -290,10 +288,6 @@ var app = new Vue({
 		}
 	    }
 	},
-	onUpdate: function (event) {
-	    this.list.splice(event.newIndex, 0,
-				this.list.splice(event.oldIndex, 1)[0]);
-	},
 
 	colors: function(n){
 	    if (undefined === n) return {};
@@ -475,10 +469,10 @@ var app = new Vue({
 	    });
 	},
 
-	updateDisplayArea: function() {
-	    this.displayArea.width = $("#displayArea").width();
-	    this.displayArea.height = $("#displayArea").height();
-	},
+	// updateDisplayArea: function() {
+	//     this.displayArea.width = $("#displayArea").width();
+	//     this.displayArea.height = $("#displayArea").height();
+	// },
 	
 	getDisplay: function() {
 	    console.log("getDisplay");
@@ -497,10 +491,10 @@ var app = new Vue({
 	    }
 	    var me = this;
 	    setTimeout(function() {
-		me.updateDisplayDimensions();
-		me.updateDisplayScroll();
-		me.setDisplayWindowListeners();
-		me.setDisplay()
+	    	me.updateDisplayDimensions();
+	    	// me.updateDisplayScrollFromDisplayWindow();
+	    	me.setDisplayWindowListeners();
+	    	me.setDisplay()
 	    }, 500);
 	    
 	    return this.display.window;
@@ -552,11 +546,11 @@ var app = new Vue({
 	    return false; // stopPropogation
 	},
 
-	updateDisplayScroll: function() {
-	    console.log('updateDisplayScroll');
+	updateDisplayScrollFromDisplayWindow: function() {
+	    console.log('updateDisplayScrollFromDisplayWindow');
 	    var w = this.display.window;
 	    if (!w) {
-		console.log('updateDisplayScroll: Error: window is null');
+		console.log('updateDisplayScrollFromDisplayWindow: Error: window is null');
 	    }
 	    var h = this.history[this.displaying];
 	    h.displayScrollTop = w.document.body.scrollTop;
@@ -564,7 +558,7 @@ var app = new Vue({
 	    return false;
 	},
 
-	setDisplayScroll: function(index, id) {
+	setDisplayScrollFromDisplayArea: function(index, id) {
 	    console.log('setDisplayScroll');
 	    var h = this.history[index];
 	    var el = document.getElementById(id);
@@ -573,12 +567,16 @@ var app = new Vue({
 	    return;
 	},
 
-	setEditScroll: function() {
+	setEditScrollFromRenderArea: function() {
 	    console.log('setEditScroll');
 	    var h = this.history[this.editing];
 	    var d = document.getElementById('renderAreaDivDiv');
 	    h.editScrollTop = d.scrollTop;
 	    h.editScrollLeft = d.scrollLeft;
+	    this.save('history.'+this.editing+'.editScrollLeft',
+		      d.scrollLeft);
+	    this.save('history.'+this.editing+'.editScrollTop',
+		      d.scrollTop);
 	},
 
 	setDisplay: function() {
@@ -608,22 +606,21 @@ var app = new Vue({
 	    return window.localStorage.historyLength || 0;
 	},
 	
-	save: function() {
+	save: function(prop, val) {
 	    console.log('save');
+	    if (prop) { // just save a specific property
+		localStorage[prop] = val;
+		return;
+	    }
 	    var h = this.history;
 	    localStorage.historyLength = h.length;
-	    for (var i = 0; i < h.length; i++) {
-		console.log('save: i', i, h[i]);
-		var s = localStorage['history'+i] = `${h[i].id}
-${h[i].colors}
-${h[i].fontSize}
-${h[i].padding}
-${h[i].editScrollLeft}
-${h[i].editScrollTop}
-${h[i].displayScrollLeft}
-${h[i].displayScrollTop}
-${h[i].html}
-`
+ 	    for (var i = 0; i < h.length; i++) {
+		for (let p of this.savedHistoryProperties) {
+		    localStorage['history.'+i+'.'+p] = h[i][p];
+		}
+	    }
+	    for (let p in this.savedProperties) {
+		localStorage[p] = this[p];
 	    }
 	},
 
@@ -633,15 +630,46 @@ ${h[i].html}
 		console.log("restore: no history");
 		return false;
 	    }
-	    for (var i = 0; i < localStorage.historyLength; i++) {
-		var x = localStorage['history'+i].split('\n');
-		this.history.push({id: this.nextSlide++, colors: x[1], fontSize: x[2], padding: x[3], editScrollLeft: x[4], editScrollTop: x[5], displayScrollLeft: x[6], displayScrollTop: x[7], html: x.slice(8).join('\n')});
-		console.log('restore history',
-			    this.history[this.history.length-1]);
+	    var h = this.history;
+	    h.splice(0, h.length);
+ 	    for (var i = 0; i < localStorage.historyLength; i++) {
+		let o = {};
+		for (let p of this.savedHistoryProperties) {
+		    o[p] = localStorage['history.'+i+'.'+p];
+		}
+		h.push(o);
 	    }
+	    for (let p in this.savedProperties) {
+		// only restore defined values
+		if (localStorage[p] !== undefined) { 
+		    localStorage[p] = this[p];
+		}
+	    }
+
+	    this.updateHistory();
+
 	    return true;
-	}   
+	},
 	
+	updateHistory: function() {
+	    // Manually update this history scrolling because vuejs
+	    // templates do not allow the scrollTop property to be
+	    // set. This method is called after the history array has
+	    // been updated (like after restoring from localStorage).
+	    // Update the history in a timeout to give time for the
+	    // dom contents to update.
+	    var me = this;
+	    window.setTimeout(function() {
+		console.log('updateHistory');
+		for (var i = 0; i < me.history.length; i++) {
+		    console.log('updateHistory: i', i);
+		    var h = me.history[i];
+		    var el = document.getElementById('history'+i);
+		    el.scrollLeft = h.displayScrollLeft;
+		    el.scrollTop = h.displayScrollTop;
+		}
+	    }, 200);
+	}
     },
     
     watch: {
@@ -656,9 +684,11 @@ ${h[i].html}
 		document.getElementById('displayAreaDivDiv'),
 		this.display.window.document.body];
 	    for (let el of els) {
-		console.log("watch displayScrollTop: setting", el);
+		console.log("watch displayScrollTop: setting to", val, el);
 		el.scrollTop = val;
 	    }
+	    this.save('history.'+this.displaying+'.displayScrollTop',
+		      h.scrollTop);
 	},
 		
 	displayScrollLeft: function(newVal, oldVal) {
@@ -670,14 +700,17 @@ ${h[i].html}
 		document.getElementById('displayAreaDivDiv'),
 		this.display.window.document.body];
 	    for (let el of els) {
-		console.log("displayScrollLeft: setting", el);
+		console.log("displayScrollLeft: setting", val, el);
 		el.scrollLeft = val;
 	    }
+	    this.save('history.'+this.displaying+'.displayScrollLeft',
+		      h.scrollLeft);
 	},
 		
 	editing: function() {
 	    // set the correct scrolling in the editing div
 	    // run in a timeout to give time to update the div contents.
+	    this.save('editing', this.editing);
 	    var me = this;
 	    window.setTimeout(function(){
 		var h = me.history[me.editing];
@@ -693,6 +726,7 @@ ${h[i].html}
 	displaying: function() {
 	    // set the correct scrolling in the display div and the display window.
 	    // run in a timeout to give time to update the div contents.
+	    this.save('displaying', this.displaying);
 	    var me = this;
 	    window.setTimeout(function(){
 		var h = me.history[me.displaying];
@@ -704,6 +738,14 @@ ${h[i].html}
 		    d.scrollTop = h.displayScrollTop;
 		    d.scrollLeft = h.displayScrollLeft;
 		}},200);
+	},
+
+	editingSlide: function() {
+	    console.log('watch editingSlide');
+	    for (let p in this.savedProperties) {
+		this.save('history.'+this.editing+'.'+p,
+			  this.history[this.editing][p]);
+	    }
 	},
 	
 	displayingSlide: function() {
@@ -725,15 +767,8 @@ ${h[i].html}
 	    console.log('watch history: length', this.history.length);
 	    var me = this;
 	    // allow time for updating contents, then update scroll position.
-	    window.setTimeout(function() {
-		console.log('watch history: setTimeout callback');
-		for (var i = 0; i < me.history.length; i++) {
-		    console.log('watch history: setTimeout callback: i', i);
-		    var h = me.history[i];
-		    var el = document.getElementById('history'+i);
-		    el.scrollLeft = h.displayScrollLeft;
-		    el.scrollTop = h.displayScrollTop;
-		}}, 200);
+	    me.save(); // save everything when history changes.
+	    me.updateHistory();
 	}
 	
     },
