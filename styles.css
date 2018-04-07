@@ -12,8 +12,9 @@
 #markdownHelpToggle:checked ~ label { display:none }
 #markdownHelpToggle:checked ~ div {
     display:block;
-    padding:1em;
-    background: #aff;
+    padding:.2em;
+    border: thick solid #aff;
+    margin: 0 .1em .2em;
 }
 #markdownHelpToggle ~ div { display:none }
 p {margin:0}
