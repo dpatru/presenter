@@ -107,6 +107,7 @@
 	    </div>
 	  </div>
 	</div><div slot="footer"
+		   title="click to add a slide"
 		   @click="insertNewSlide(history.length)"
 		   @contextmenu.prevent="$refs.historyCtx.open($event, {})"
 		   v-bind:style="historyItemWrapperStyle()">
