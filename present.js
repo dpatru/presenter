@@ -165,6 +165,7 @@ var app = new Vue({
 	},
 
 	newSlide: function(i) {
+	    console.log('newSlide', i);
 	    if (this.history.length < 1) {
 		throw "newSlide Error: no items in history";
 	    }
