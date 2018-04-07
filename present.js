@@ -194,7 +194,10 @@ var app = new Vue({
  	    if (!duplicate) { // discard the content, keep styling
 		newSlide.html = '';
 	    }
-	    this.history.splice(append? position+1: position, 0, newSlide);
+	    if (append) {
+		position += 1;
+	    }
+	    this.history.splice(position, 0, newSlide);
 			
 	    // adjust editing and displaying pointers if they moved
 	    // because a new slide was inserted before them
@@ -206,7 +209,11 @@ var app = new Vue({
 	},
 
 	duplicateSlide: function(position) {
-	    return this.insertNewSlide(position, true);
+	    var r = this.insertNewSlide(position, true, true);
+	    if (this.editing == position) {
+		this.editing += 1;
+	    }
+	    return r;
 	},
 
 	deleteSlide: function(position) {

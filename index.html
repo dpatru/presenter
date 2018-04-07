@@ -212,6 +212,15 @@ breaks
 	      <input name="colors" type="radio" value="whiteOnBlack" v-model="history[editing].colors">
 	      white on black
 	    </label>
+	    <br>
+	    <button v-on:click="duplicateSlide(editing)">
+	      Duplicate this slide
+	    </button>
+	    <br v-if="history.length > 1">
+	    <button v-if="history.length > 1" v-on:click="deleteSlide(editing)">
+	      Delete this slide
+	    </button>
+	    
 	  </td><td id="renderArea">
 	    <div v-bind:style="renderAreaWrapperStyle(editing)">
 	      <div v-bind:style="renderAreaStyle(editing)"
