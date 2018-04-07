@@ -76,18 +76,13 @@
 	</li>
 	<li class="ctx-item"
 	    v-if="!contextMenuData.item"
-	    @click="confirm('Really delete all the slides?') && deleteAllSlides()">
-	  Delete All Slides
-	</li>
-	<li class="ctx-item"
-	    v-if="!contextMenuData.item && numberOfSavedSlides() > 0"
-	    @click="restore()">
-	  Recover {{ numberOfSavedSlides() }} saved slides from localStorage
+	    @click="insertNewSlide(history.length)">
+	  Add Slide
 	</li>
 	<li class="ctx-item"
 	    v-if="!contextMenuData.item"
-	    @click="save()">
-	  Save slides to localStorage
+	    @click="confirm('Really delete all the slides?') && deleteAllSlides()">
+	  Delete All Slides
 	</li>
       </context-menu>
       
