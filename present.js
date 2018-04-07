@@ -622,7 +622,7 @@ var app = new Vue({
 	},
 	
 	save: function(prop, val) {
-	    console.log('save');
+	    console.log('save', prop, val);
 	    if (prop) { // just save a specific property
 		localStorage[prop] = val;
 		return;
