@@ -47,14 +47,9 @@ var app = new Vue({
 	     fontSize: 1, padding: 10,
 	     displayScrollLeft: 0, displayScrollTop: 0,
 	     editScrollLeft: 0, editScrollTop: 0,
-	    },
-	    {id: 1, html: 'two', colors: 'whiteOnBlack',
-	     fontSize: 1, padding: 10,
-	     displayScrollLeft: 0, displayScrollTop: 0,
-	     editScrollLeft: 0, editScrollTop: 0
 	    }
 	],
-	nextSlide: 2,
+	nextSlide: 1,
 	displaying: 0,
 	editing: 0,
 	renderArea: {height:0, width: 0},
