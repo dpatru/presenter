@@ -173,7 +173,10 @@ var app = new Vue({
 		throw "newSlide Error: invalid index " + i;
 	    }
 	    var html = i == this.history.length? '': this.history[i].html;
-	    return Object.assign({}, this.history[i], {html: html});
+	    return Object.assign(
+		{},
+		this.history[Math.min(i, this.history.length-1)],
+		{id: this.nextSlide++, html: html});
 	},
 	    
 	insertNewSlide: function(position, duplicate, append) {
