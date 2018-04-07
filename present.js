@@ -646,13 +646,14 @@ var app = new Vue({
 		return false;
 	    }
 	    var h = this.history;
-	    h.splice(0, h.length);
  	    for (var i = 0; i < localStorage.historyLength; i++) {
 		let o = {};
 		for (let p of this.savedHistoryProperties) {
 		    o[p] = localStorage['history.'+i+'.'+p];
 		}
-		h.push(o);
+		let o2 = Object.assign({}, this.history[0], o,
+				       {id:this.nextSlide++});
+		h.splice(i, 1, o2);
 	    }
 	    for (let p in this.savedProperties) {
 		// only restore defined values
