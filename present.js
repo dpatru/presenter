@@ -170,17 +170,14 @@ var app = new Vue({
 	},
 
 	newSlide: function(i) {
-	    var s = {
-		id: this.nextSlide++, html: '', colors: 'blackOnWhite', fontSize: 1, padding: 10
-	    };
-	    if (i in this.history) {
-		var d = this.history[i];
-		s.html = d.html;
-		s.colors = d.colors;
-		s.fontSize = d.fontSize;
-		s.padding = d.padding;
+	    if (this.history.length < 1) {
+		throw "newSlide Error: no items in history";
 	    }
-	    return s;
+	    if (i < 0 || i > this.history.length) {
+		throw "newSlide Error: invalid index " + i;
+	    }
+	    var html = i == this.history.length? '': this.history[i].html;
+	    return Object.assign({}, this.history[i], {html: html});
 	},
 	    
 	insertNewSlide: function(position, duplicate, append) {
