@@ -663,6 +663,7 @@ var app = new Vue({
 
 	    this.updateHistory();
 
+	    console.log('restore: done');
 	    return true;
 	},
 	
