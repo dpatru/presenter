@@ -18,3 +18,4 @@
 }
 #markdownHelpToggle ~ div { display:none }
 p {margin:0; margin-top: 1em }
+td { vertical-align:top }
