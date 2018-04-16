@@ -49,6 +49,13 @@ var app = new Vue({
 	     editScrollLeft: 0, editScrollTop: 0,
 	    }
 	],
+	// search for verse breaks: verses between sentences or
+	// headings, catch optional ending quotes with .?
+	rein: '',
+	reout: '',
+	versesRE: /([\.?,]\S? |\n[\p{L} ]{3,50}\n)(\d{1,3}\s\S)/gu,
+	versesREout: String.raw`$1\n\n$2`,
+	versionRE: /Cornilescu 1924 - Revised 2010, 2014 \(RMNN\)/g, //|Nouă Traducere În Limba Română (NTLR)/g,
 	nextSlide: 1,
 	displaying: 0,
 	editing: 0,
@@ -73,6 +80,57 @@ var app = new Vue({
     },
     
     methods: {
+	testVersionRE: _.debounce(function() {
+	    try {
+		return this.versionRE.test(this.history[this.editing].html);
+	    }
+	    catch (error) {
+		return false;
+	    }
+	}),
+
+	// remove version string from text
+	removeVersion: function() {
+	    var h = this.history[this.editing];
+	    var out = "\n\n";
+	    return h.html = h.html.replace(this.versionRE, out);
+	},
+
+	// test if verses need to be separated
+	testVerses: _.debounce(function() {
+	    try {
+		return this.versesRE.test(this.history[this.editing].html);
+	    }
+	    catch (error) {
+		return false;
+	    }
+	}),
+
+	// separate verses in the text
+	separateVerses: function() {
+	    var h = this.history[this.editing];
+	    var out = eval('"'+this.versesREout+'"');
+	    return h.html = h.html.replace(this.versesRE, out);
+	},
+	    
+	    
+	testre: _.debounce(function() {
+	    try {
+	    var re = new RegExp(this.rein, 'g');
+		return re.test(this.history[this.editing].html);
+	    }
+	    catch (error) {
+		return false;
+	    }
+	}, 300),
+
+	runre: function() {
+	    var re = new RegExp(this.rein, 'g');
+	    var h = this.history[this.editing];
+	    var out = eval('"'+this.reout+'"');
+	    return h.html = h.html.replace(re, out);
+	},
+	    
 	update: _.debounce(function (e) {
 	    this.history[this.editing].html = e.target.value;
 	    this.history[this.editing]

@@ -17,4 +17,4 @@
     margin: 0 .1em .2em;
 }
 #markdownHelpToggle ~ div { display:none }
-p {margin:0}
+p {margin:0; margin-top: 1em }

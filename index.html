@@ -193,6 +193,20 @@ breaks
 <a href="https://github.github.com/gfm/">More on Markdown syntax</a>
 	      </div>
 	    </div>
+	    
+	    <div v-if="testVersionRE()">
+	      <button v-on:click="removeVersion">Remove version string</button>
+	    </div>
+	    <div v-if="testVerses()">
+	      <button v-on:click="separateVerses">Separate verses</button>
+	    </div>
+	    <br>
+
+	    <label>RegExp <input v-model="rein"> </label>
+	    <label>Replacement <input v-model="reout"> </label>
+	    <button v-if="testre()" v-on:click="runre"> Run Regexp </button>
+	    <br>
+
 	    <label>fontSize
 	      <span id="fontSize">{{history[editing].fontSize}} em</span>
 	      <input type="range" min="1" max="20" step=".1" value="1" v-model="history[editing].fontSize">
