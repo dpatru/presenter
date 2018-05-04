@@ -27,10 +27,10 @@ var emphPattern = /(\W)\*(\w.*\S)\*(\W)/.compile()
 function emphasize(txt) {
     // console.log('emphasize:',txt);
     return txt
-	.replace(/(\W)\*\*(\w.*?\S)\*\*(\W)/g,
+	.replace(/(.)\*\*(\w.*?\S)\*\*(.)/ug,
 		 function(m,m1,m2,m3){
 		     return m1+'<em class="bold">'+m2+'</em>'+m3;})
-	.replace(/(\W)\*(\w.*?\S)\*(\W)/g,
+	.replace(/(.)\*(\w.*?\S)\*(.)/ug,
 		 function(m,m1,m2,m3){
 		     return m1+'<em class="hilite">'+m2+'</em>'+m3;});
 }

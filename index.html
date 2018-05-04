@@ -125,23 +125,16 @@
 	<tr>
 	  <th>
 	    Edit HTML
-	    <label for="editingRange"> {{editing}} </label><br>
+	    <label for="editingRange"> <input type="number" min="0" :max="history.length-1" v-model.number="editing"></label><br>
 	    <a v-on:click="editing = Math.max(0, editing-1); return false;"
 	       style="cursor:pointer"> - </a>
 	    <input type="range" min="0" id="editingRange"
-		   :max="history.length-1" v-model="editing">
+		   :max="history.length-1" v-model.number="editing">
 	    <a v-on:click="editing = Math.min(history.length-1, editing+1); return false;"
 	       style="cursor:pointer"> + </a>
 	  </th>
 	  <th>
 	    Edit Rendered
-	    <label for="editingRange"> {{editing}} </label><br>
-	    <a v-on:click="editing = Math.max(0, editing-1); return false;"
-	       style="cursor:pointer"> - </a>
-	    <input type="range" min="0" id="editingRange"
-		   :max="history.length-1" v-model="editing">
-	    <a v-on:click="editing = Math.min(history.length-1, editing+1); return false;"
-	       style="cursor:pointer"> + </a>
 	  </th>
 	</tr>
 	<tr><td>
@@ -201,11 +194,10 @@ breaks
 	      <button v-on:click="separateVerses">Separate verses</button>
 	    </div>
 	    <br>
-
-	    <label>RegExp <input v-model="rein"> </label>
-	    <label>Replacement <input v-model="reout"> </label>
-	    <button v-if="testre()" v-on:click="runre"> Run Regexp </button>
-	    <br>
+	    <!-- <label>RegExp <input v-model="rein"> </label> -->
+	    <!-- <label>Replacement <input v-model="reout"> </label> -->
+	    <!-- <button v-if="testre()" v-on:click="runre"> Run Regexp </button> -->
+	    <!-- <br> -->
 
 	    <label>fontSize
 	      <span id="fontSize">{{history[editing].fontSize}} em</span>
@@ -217,14 +209,11 @@ breaks
 	      <input type="range" min="0" max="400" step="1" v-model="history[editing].padding">
 	    </label>
 	    <br>
-	    <label>
-	      <input name="colors" type="radio" value="blackOnWhite" v-model="history[editing].colors">
-	  black on white
-	    </label>
-	    <br>
-	    <label>
-	      <input name="colors" type="radio" value="whiteOnBlack" v-model="history[editing].colors">
-	      white on black
+	    <label>Style
+	      <select name="colors" v-model="history[editing].colors">
+		<option value="whiteOnBlack">white on black</option>
+		<option value="blackOnWhite">black on white</option>
+	      </select>
 	    </label>
 	    <br>
 	    <button v-on:click="duplicateSlide(editing)">
