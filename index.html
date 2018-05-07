@@ -102,8 +102,11 @@
 	       >
 	    <div v-bind:style="slideStyle(index)"
 		 v-bind:class="className(index)"
-		 v-html="html(index)">
-
+		 v-html="html(index)"
+		 contenteditable="true"
+		 v-bind:id="'history'+index+'slide'"
+		 v-on:input="updateHTML(index, $event.target.innerHTML)"
+		 >
 	    </div>
 	  </div>
 	</div><div slot="footer"

@@ -1,7 +1,14 @@
 .blackOnWhite {padding:1em; margin:0; /* white-space:pre-wrap */} 
 .blackOnWhite em.hilite {font-style:normal; background:yellow} 
 .blackOnWhite em.bold {font-style:normal; color:red}
-.whiteOnBlack {color:white; background-color:black; padding:1em; margin:0; /* white-space:pre-wrap */} 
+.whiteOnBlack {
+    color:white;
+    background-color:black;
+    padding:1em;
+    margin:0;
+    caret-color: white;
+    /* white-space:pre-wrap */
+} 
 .whiteOnBlack em.hilite {font-style: normal; color:yellow} 
 .whiteOnBlack em.bold {font-style:normal;color:lightcoral}
 

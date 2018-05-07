@@ -35,6 +35,56 @@ function emphasize(txt) {
 		     return m1+'<em class="hilite">'+m2+'</em>'+m3;});
 }
 
+// https://stackoverflow.com/a/26477716/268040
+function saveRangePosition() {
+    var range=window.getSelection().getRangeAt(0);
+    var sC=range.startContainer,eC=range.endContainer;
+    var bE = document.body;
+    var A=[];while(sC!==bE){A.push(getNodeIndex(sC));sC=sC.parentNode}
+    var B=[];while(eC!==bE){B.push(getNodeIndex(eC));eC=eC.parentNode}
+    
+    window.rp={"sC":A,"sO":range.startOffset,"eC":B,"eO":range.endOffset};
+}
+
+function restoreRangePosition() {
+    var bE = document.body;
+    bE.focus();
+    var sel=window.getSelection(),range=sel.getRangeAt(0);
+    var x,C,sC=bE,eC=bE;
+    
+    var C=rp.sC;x=C.length;while(x--)sC=sC.childNodes[C[x]];
+    C=rp.eC;x=C.length;while(x--)eC=eC.childNodes[C[x]];
+    
+    range.setStart(sC,rp.sO);
+    range.setEnd(eC,rp.eO);
+    sel.removeAllRanges();
+    sel.addRange(range)
+}
+function getNodeIndex(n){var i=0;while(n=n.previousSibling)i++;return i}
+
+function saveSelection() {
+    if (window.getSelection) {
+        sel = window.getSelection();
+        if (sel.getRangeAt && sel.rangeCount) {
+            return sel.getRangeAt(0);
+        }
+    } else if (document.selection && document.selection.createRange) {
+        return document.selection.createRange();
+    }
+    return null;
+}
+
+function restoreSelection(range) {
+    if (range) {
+        if (window.getSelection) {
+            sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        } else if (document.selection && range.select) {
+            range.select();
+        }
+    }
+}
 
 
 
@@ -80,6 +130,25 @@ var app = new Vue({
     },
     
     methods: {
+	updateHTML: _.debounce( function(i, html){
+	    // console.log('updateHTML:', i, html);
+	    if (i == undefined || html == undefined) {
+		console.log('updateHTML: ERROR');
+	    }
+	    
+	    // let sel = saveSelection();
+	    saveRangePosition();
+	    // console.log(sel);
+	    this.history[i].html = html;
+	    Vue.nextTick(
+		function(){
+		    // console.log('at next tick sel =', sel);
+		    // console.log('at next tick content =', document.getElementById('history'+i+'slide').innerHTML);
+		    // restoreSelection(sel);
+		    restoreRangePosition();
+		});
+	}),
+			       
 	testVersionRE: _.debounce(function() {
 	    try {
 		return this.versionRE.test(this.history[this.editing].html);
@@ -142,6 +211,7 @@ var app = new Vue({
 
 	html: function(n) {
 	    // https://vuejs.org/v2/examples/
+	    return this.history[n].html;
 	    return marked(emphasize(this.history[n].html),
 			  { sanitize: false});
 	},
